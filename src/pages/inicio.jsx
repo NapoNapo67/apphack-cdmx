@@ -10,7 +10,7 @@ const EJEMPLOS = [
 ]
 
 export default function Inicio({ onAnalizar }) {
-  const { setActiveTab, setBusquedaInicial } = useApp()
+  const { setActiveTab, setBusquedaInicial, login } = useApp()
   const [texto, setTexto] = useState('')
   const [cargando, setCargando] = useState(false)
 
@@ -120,7 +120,7 @@ export default function Inicio({ onAnalizar }) {
         ))}
       </div>
 
-      {/* Pie */}
+      {/* Pie + acceso funcionarios */}
       <p className="text-xs text-gray-400 mt-10 text-center">
         Secretaría de Desarrollo Económico · Gobierno de la Ciudad de México<br/>
         CENPROIN: Av. Cuauhtémoc 899, Narvarte · Lun–Vie 9:00–14:30 ·{' '}
@@ -128,6 +128,12 @@ export default function Inicio({ onAnalizar }) {
           dudas.siapem@sedeco.cdmx.gob.mx
         </a>
       </p>
+      <button
+        onClick={login}
+        className="mt-4 text-xs text-gray-300 hover:text-gray-400 transition-colors underline underline-offset-2"
+      >
+        Acceso funcionarios →
+      </button>
     </div>
   )
 }

@@ -1,17 +1,27 @@
 import { createContext, useContext, useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
 
 const AppContext = createContext(null)
 
+// Usuario demo para el hackathon — no requiere OAuth
+const USUARIO_DEMO = {
+  id: 'demo-user',
+  email: 'racota.ideas@gmail.com',
+  user_metadata: { full_name: 'Usuario SEDECO', avatar_url: null },
+}
+
 export function AppProvider({ children }) {
-  const { user, loading: authLoading } = useAuth()
+  const [user, setUser]                       = useState(null)
   const [sidebarOpen, setSidebarOpen]         = useState(false)
   const [activeTab, setActiveTab]             = useState('inicio')
   const [busquedaInicial, setBusquedaInicial] = useState('')
 
+  const login  = () => setUser(USUARIO_DEMO)
+  const logout = () => { setUser(null); setActiveTab('inicio') }
+
   return (
     <AppContext.Provider value={{
-      user, authLoading,
+      user, authLoading: false,
+      login, logout,
       sidebarOpen, setSidebarOpen,
       activeTab, setActiveTab,
       busquedaInicial, setBusquedaInicial,
