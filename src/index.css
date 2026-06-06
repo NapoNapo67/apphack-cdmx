@@ -6,16 +6,23 @@
 @tailwind utilities;
 
 :root {
-  --gov-verde:        #006847;
-  --gov-verde-oscuro: #004d34;
-  --gov-verde-claro:  #e8f5ef;
-  --gov-blanco:       #FFFFFF;
-  --gov-rojo:         #CE1126;
-  --gov-oro:          #C8A217;
-  --gov-gris:         #F5F5F5;
-  --gov-gris-medio:   #E0E0E0;
-  --gov-gris-oscuro:  #333333;
-  --gov-texto:        #1A1A1A;
+  /* Paleta oficial CDMX 2024 — Gobierno de Claudia Sheinbaum */
+  --gov-guinda:        #7B1F3A;   /* primario institucional */
+  --gov-guinda-oscuro: #5a1529;   /* hover, headers */
+  --gov-guinda-claro:  #f5e8ec;   /* fondos suaves */
+  --gov-dorado:        #B8975A;   /* "Capital de la Transformación" */
+  --gov-dorado-claro:  #f7f0e3;   /* fondos dorado suave */
+  --gov-blanco:        #FFFFFF;
+  --gov-gris:          #F5F5F5;
+  --gov-gris-medio:    #E0E0E0;
+  --gov-gris-oscuro:   #333333;
+  --gov-texto:         #1A1A1A;
+  /* Aliases para no romper componentes existentes */
+  --gov-verde:         #7B1F3A;
+  --gov-verde-oscuro:  #5a1529;
+  --gov-verde-claro:   #f5e8ec;
+  --gov-oro:           #B8975A;
+  --gov-rojo:          #7B1F3A;
 }
 
 * { box-sizing: border-box; }
@@ -32,19 +39,15 @@ body {
   min-height: 100vh;
 }
 
-/* Franja tricolor */
+/* Franja institucional CDMX — guinda sólido */
 .tricolor {
-  background: linear-gradient(to right,
-    var(--gov-verde) 33.33%,
-    var(--gov-blanco) 33.33% 66.66%,
-    var(--gov-rojo) 66.66%
-  );
-  height: 5px;
+  background: var(--gov-guinda);
+  height: 6px;
 }
 
 /* Botón primario gobierno */
 .btn-gov {
-  background-color: var(--gov-verde);
+  background-color: var(--gov-guinda);
   color: white;
   padding: 0.5rem 1.25rem;
   border-radius: 0.375rem;
@@ -54,12 +57,13 @@ body {
   cursor: pointer;
   transition: background-color 0.2s;
 }
-.btn-gov:hover { background-color: var(--gov-verde-oscuro); }
+.btn-gov:hover { background-color: var(--gov-guinda-oscuro); }
+.btn-gov:disabled { background-color: var(--gov-gris-medio); cursor: not-allowed; }
 
 .btn-gov-outline {
   background-color: transparent;
-  color: var(--gov-verde);
-  border: 2px solid var(--gov-verde);
+  color: var(--gov-guinda);
+  border: 2px solid var(--gov-guinda);
   padding: 0.5rem 1.25rem;
   border-radius: 0.375rem;
   font-weight: 600;
@@ -67,9 +71,7 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
-.btn-gov-outline:hover {
-  background-color: var(--gov-verde-claro);
-}
+.btn-gov-outline:hover { background-color: var(--gov-guinda-claro); }
 
 /* Card gobierno */
 .card-gov {

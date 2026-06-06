@@ -5,11 +5,17 @@ const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
   const { user, loading: authLoading } = useAuth()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [sidebarOpen, setSidebarOpen]         = useState(false)
+  const [activeTab, setActiveTab]             = useState('inicio')
+  const [busquedaInicial, setBusquedaInicial] = useState('')
 
   return (
-    <AppContext.Provider value={{ user, authLoading, sidebarOpen, setSidebarOpen, activeTab, setActiveTab }}>
+    <AppContext.Provider value={{
+      user, authLoading,
+      sidebarOpen, setSidebarOpen,
+      activeTab, setActiveTab,
+      busquedaInicial, setBusquedaInicial,
+    }}>
       {children}
     </AppContext.Provider>
   )
