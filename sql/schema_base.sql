@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS dw.dim_estado (
   id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   clave_inegi      VARCHAR(5) UNIQUE NOT NULL,
   nombre           VARCHAR(100) NOT NULL,
-  abrev            VARCHAR(5) NOT NULL,
+  abrev            VARCHAR(10) NOT NULL,
   region           VARCHAR(50),
   activo           BOOLEAN DEFAULT true
 );
