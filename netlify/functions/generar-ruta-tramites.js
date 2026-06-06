@@ -1,8 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk'
+﻿const Anthropic = require('@anthropic-ai/sdk')
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
   try {
@@ -12,33 +12,33 @@ export const handler = async (event) => {
     const impacto = giro.impacto_mercantil || 'BAJO'
     const formatoSIAPEM = giro.formato_siapem || 'EM-03'
     const impactoDesc = {
-      BAJO:    'Bajo Impacto (Art. 35 LEM) → EM-03, GRATUITO, opera al día siguiente',
-      VECINAL: 'Impacto Vecinal (Art. 19 LEM) → EM-11, requiere pago de derechos',
-      ZONAL:   'Impacto Zonal (Art. 27 Bis LEM) → EM-08, requiere APROBACIÓN de la Alcaldía (no es automático)',
+      BAJO:    'Bajo Impacto (Art. 35 LEM) â†’ EM-03, GRATUITO, opera al dÃ­a siguiente',
+      VECINAL: 'Impacto Vecinal (Art. 19 LEM) â†’ EM-11, requiere pago de derechos',
+      ZONAL:   'Impacto Zonal (Art. 27 Bis LEM) â†’ EM-08, requiere APROBACIÃ“N de la AlcaldÃ­a (no es automÃ¡tico)',
     }[impacto]
 
-    const prompt = `Eres un experto en trámites mercantiles de la Ciudad de México. Conoces a fondo la Ley de Establecimientos Mercantiles (LEM), el SIAPEM, SEDUVI, SAT, COFEPRIS e IMSS.
+    const prompt = `Eres un experto en trÃ¡mites mercantiles de la Ciudad de MÃ©xico. Conoces a fondo la Ley de Establecimientos Mercantiles (LEM), el SIAPEM, SEDUVI, SAT, COFEPRIS e IMSS.
 
-CLASIFICACIÓN SIAPEM (LEM):
-- EM-03: Bajo Impacto (Art. 35) → gratuito, opera al día siguiente, para abarrotes/estéticas/papelerías/fondas/oficinas
-- EM-11: Impacto Vecinal (Art. 19) → pago de derechos, para restaurantes/hoteles/salones de fiesta
-- EM-08: Impacto Zonal (Art. 27 Bis) → PERMISO que DEBE SER APROBADO por la Alcaldía, para bares/cantinas/antros/discotecas
+CLASIFICACIÃ“N SIAPEM (LEM):
+- EM-03: Bajo Impacto (Art. 35) â†’ gratuito, opera al dÃ­a siguiente, para abarrotes/estÃ©ticas/papelerÃ­as/fondas/oficinas
+- EM-11: Impacto Vecinal (Art. 19) â†’ pago de derechos, para restaurantes/hoteles/salones de fiesta
+- EM-08: Impacto Zonal (Art. 27 Bis) â†’ PERMISO que DEBE SER APROBADO por la AlcaldÃ­a, para bares/cantinas/antros/discotecas
 
-PROTECCIÓN CIVIL: NO se requiere si el local tiene <100 personas Y ≤250 m² (Art. 10, A, X, LEM)
+PROTECCIÃ“N CIVIL: NO se requiere si el local tiene <100 personas Y â‰¤250 mÂ² (Art. 10, A, X, LEM)
 
-PRIMER DOCUMENTO SIEMPRE: Certificado Único de Zonificación de Uso de Suelo (SEDUVI, vigencia máx 1 año)
+PRIMER DOCUMENTO SIEMPRE: Certificado Ãšnico de ZonificaciÃ³n de Uso de Suelo (SEDUVI, vigencia mÃ¡x 1 aÃ±o)
 
 Un emprendedor quiere abrir:
 - Giro: ${giro.nombre} (${giro.clave})
-- Clasificación de impacto mercantil: ${impactoDesc}
+- ClasificaciÃ³n de impacto mercantil: ${impactoDesc}
 - Formato SIAPEM que le corresponde: ${formatoSIAPEM}
 - Estructura legal: ${tipo_persona.nombre} (${tipo_persona.clave})
-- Alcaldía: ${alcaldia.nombre}
-- ¿Requiere licencia de alcohol?: ${giro.clave === 'BAR_CANTINA' ? 'SÍ' : 'NO'}
-- ¿Riesgo sanitario?: ${giro.riesgo_sanitario || 'BAJO'}
+- AlcaldÃ­a: ${alcaldia.nombre}
+- Â¿Requiere licencia de alcohol?: ${giro.clave === 'BAR_CANTINA' ? 'SÃ' : 'NO'}
+- Â¿Riesgo sanitario?: ${giro.riesgo_sanitario || 'BAJO'}
 
-TRÁMITES DISPONIBLES EN EL SISTEMA:
-${tramites_disponibles.map(t => `- [${t.clave}] ${t.nombre} | ${t.costo_descripcion} | ${t.plazo_dias} días hábiles`).join('\n')}
+TRÃMITES DISPONIBLES EN EL SISTEMA:
+${tramites_disponibles.map(t => `- [${t.clave}] ${t.nombre} | ${t.costo_descripcion} | ${t.plazo_dias} dÃ­as hÃ¡biles`).join('\n')}
 
 PROGRAMAS DE APOYO DISPONIBLES:
 ${programas_disponibles.map(p => `- [${p.clave}] ${p.nombre} | ${p.monto_descripcion}`).join('\n')}
@@ -50,9 +50,9 @@ Genera una respuesta JSON con exactamente este formato:
     {
       "paso": 1,
       "clave_tramite": "<clave exacta del tramite>",
-      "nombre": "<nombre del trámite>",
-      "por_que": "<por qué este paso en este momento>",
-      "tip": "<consejo práctico específico para este emprendedor>",
+      "nombre": "<nombre del trÃ¡mite>",
+      "por_que": "<por quÃ© este paso en este momento>",
+      "tip": "<consejo prÃ¡ctico especÃ­fico para este emprendedor>",
       "es_paralelo": false,
       "semana_inicio": 1
     }
@@ -61,19 +61,19 @@ Genera una respuesta JSON con exactamente este formato:
     {
       "clave_programa": "<clave exacta>",
       "nombre": "<nombre>",
-      "por_que": "<por qué aplica a este emprendedor>"
+      "por_que": "<por quÃ© aplica a este emprendedor>"
     }
   ],
-  "resumen_cronograma": "<descripción de cuánto tiempo toma todo el proceso>",
+  "resumen_cronograma": "<descripciÃ³n de cuÃ¡nto tiempo toma todo el proceso>",
   "costo_total_estimado": {
-    "min": <número>,
-    "max": <número>,
-    "nota": "<qué incluye>"
+    "min": <nÃºmero>,
+    "max": <nÃºmero>,
+    "nota": "<quÃ© incluye>"
   },
-  "primer_paso_hoy": "<qué puede hacer el emprendedor HOY MISMO para empezar>"
+  "primer_paso_hoy": "<quÃ© puede hacer el emprendedor HOY MISMO para empezar>"
 }
 
-Usa solo claves que existan en la lista de trámites disponibles. Responde ÚNICAMENTE con el JSON.`
+Usa solo claves que existan en la lista de trÃ¡mites disponibles. Responde ÃšNICAMENTE con el JSON.`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -94,3 +94,4 @@ Usa solo claves que existan en la lista de trámites disponibles. Responde ÚNIC
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) }
   }
 }
+

@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+﻿const Anthropic = require('@anthropic-ai/sdk')
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -10,14 +10,14 @@ const GIROS = [
   'TECH_STARTUP','VETERINARIA','FERRETERIA','LAVANDERIA','PAPELERIA',
 ]
 
-// Alcaldías de CDMX
+// AlcaldÃ­as de CDMX
 const ALCALDIAS = [
-  'Azcapotzalco','Coyoacán','Cuajimalpa','Cuauhtémoc','Gustavo A. Madero',
+  'Azcapotzalco','CoyoacÃ¡n','Cuajimalpa','CuauhtÃ©moc','Gustavo A. Madero',
   'Iztacalco','Iztapalapa','Magdalena Contreras','Miguel Hidalgo','Milpa Alta',
-  'Álvaro Obregón','Tláhuac','Tlalpan','Venustiano Carranza','Xochimilco','Benito Juárez',
+  'Ãlvaro ObregÃ³n','TlÃ¡huac','Tlalpan','Venustiano Carranza','Xochimilco','Benito JuÃ¡rez',
 ]
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
   try {
@@ -28,19 +28,19 @@ export const handler = async (event) => {
       max_tokens: 300,
       messages: [{
         role: 'user',
-        content: `Analiza esta descripción de un emprendedor mexicano y extrae información estructurada.
+        content: `Analiza esta descripciÃ³n de un emprendedor mexicano y extrae informaciÃ³n estructurada.
 
 Texto del emprendedor: "${texto}"
 
-Responde ÚNICAMENTE con JSON, sin texto adicional:
+Responde ÃšNICAMENTE con JSON, sin texto adicional:
 {
-  "giro_clave": "<una de: ${GIROS.join(', ')} — elige la más cercana>",
-  "alcaldia": "<una de: ${ALCALDIAS.join(', ')} — si no menciona ninguna, null>",
-  "descripcion_refinada": "<reescribe su idea en 1 oración clara y concreta>",
+  "giro_clave": "<una de: ${GIROS.join(', ')} â€” elige la mÃ¡s cercana>",
+  "alcaldia": "<una de: ${ALCALDIAS.join(', ')} â€” si no menciona ninguna, null>",
+  "descripcion_refinada": "<reescribe su idea en 1 oraciÃ³n clara y concreta>",
   "palabras_clave": ["<keyword1>", "<keyword2>"]
 }
 
-Si no puedes identificar el giro con certeza, usa el más probable.`,
+Si no puedes identificar el giro con certeza, usa el mÃ¡s probable.`,
       }],
     })
 
@@ -57,3 +57,4 @@ Si no puedes identificar el giro con certeza, usa el más probable.`,
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) }
   }
 }
+

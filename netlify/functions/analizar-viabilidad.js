@@ -1,27 +1,27 @@
-import Anthropic from '@anthropic-ai/sdk'
+﻿const Anthropic = require('@anthropic-ai/sdk')
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
   try {
     const { giro, alcaldia, tipo_persona, contexto_giro, contexto_zona } = JSON.parse(event.body)
 
-    const prompt = `Eres un experto en desarrollo económico, normatividad mercantil y análisis de mercado de la Ciudad de México (CDMX), con conocimiento profundo del RETYS, SIAPEM, SEDUVI y la Ley de Establecimientos Mercantiles.
+    const prompt = `Eres un experto en desarrollo econÃ³mico, normatividad mercantil y anÃ¡lisis de mercado de la Ciudad de MÃ©xico (CDMX), con conocimiento profundo del RETYS, SIAPEM, SEDUVI y la Ley de Establecimientos Mercantiles.
 
 Un emprendedor quiere abrir el siguiente negocio:
 
 NEGOCIO:
 - Tipo de giro: ${giro.nombre} (${giro.clave})
-- Descripción del emprendedor: "${giro.descripcion_libre}"
-- Categoría SCIAN: ${giro.clave_scian || 'N/A'}
+- DescripciÃ³n del emprendedor: "${giro.descripcion_libre}"
+- CategorÃ­a SCIAN: ${giro.clave_scian || 'N/A'}
 - Estructura legal elegida: ${tipo_persona.nombre}
 
-UBICACIÓN:
-- Alcaldía: ${alcaldia.nombre}
+UBICACIÃ“N:
+- AlcaldÃ­a: ${alcaldia.nombre}
 - Colonia / zona: ${alcaldia.colonia || 'No especificada'}
-- Uso de suelo permitido en la zona (SEDUVI): ${contexto_zona.uso_suelo || 'No verificado aún'}
+- Uso de suelo permitido en la zona (SEDUVI): ${contexto_zona.uso_suelo || 'No verificado aÃºn'}
 - Usos de suelo compatibles con este giro: ${giro.uso_suelo_ok?.join(', ') || 'COM, COM_S, MIX'}
 
 DATOS DE CONTEXTO DE LA ZONA:
@@ -30,14 +30,14 @@ ${JSON.stringify(contexto_zona, null, 2)}
 DATOS DEL GIRO:
 ${JSON.stringify(contexto_giro, null, 2)}
 
-Proporciona un análisis estructurado en JSON con exactamente este formato:
+Proporciona un anÃ¡lisis estructurado en JSON con exactamente este formato:
 
 {
-  "score": <número del 0 al 100>,
+  "score": <nÃºmero del 0 al 100>,
   "nivel": "<ALTO|MEDIO|BAJO|MUY_BAJO>",
   "resumen": "<2-3 oraciones de resumen ejecutivo>",
   "uso_suelo_compatible": <true|false>,
-  "uso_suelo_explicacion": "<explicación de compatibilidad>",
+  "uso_suelo_explicacion": "<explicaciÃ³n de compatibilidad>",
   "oportunidades": [
     "<oportunidad 1>",
     "<oportunidad 2>",
@@ -50,24 +50,24 @@ Proporciona un análisis estructurado en JSON con exactamente este formato:
   ],
   "competencia": {
     "nivel": "<ALTA|MEDIA|BAJA>",
-    "descripcion": "<descripción de la competencia en la zona>",
-    "estimado_competidores": <número estimado>
+    "descripcion": "<descripciÃ³n de la competencia en la zona>",
+    "estimado_competidores": <nÃºmero estimado>
   },
   "demanda": {
     "nivel": "<ALTA|MEDIA|BAJA>",
-    "descripcion": "<descripción de la demanda esperada>"
+    "descripcion": "<descripciÃ³n de la demanda esperada>"
   },
   "inversion_estimada": {
-    "min": <número en pesos>,
-    "max": <número en pesos>,
-    "descripcion": "<qué incluye esta estimación>"
+    "min": <nÃºmero en pesos>,
+    "max": <nÃºmero en pesos>,
+    "descripcion": "<quÃ© incluye esta estimaciÃ³n>"
   },
-  "tiempo_apertura_meses": <número>,
-  "recomendacion_zona": "<recomendación específica sobre la zona o si sugiere otra zona>",
-  "tip_clave": "<el consejo más importante para este emprendedor específico>"
+  "tiempo_apertura_meses": <nÃºmero>,
+  "recomendacion_zona": "<recomendaciÃ³n especÃ­fica sobre la zona o si sugiere otra zona>",
+  "tip_clave": "<el consejo mÃ¡s importante para este emprendedor especÃ­fico>"
 }
 
-Responde ÚNICAMENTE con el JSON, sin texto adicional. Sé específico y realista sobre la CDMX.`
+Responde ÃšNICAMENTE con el JSON, sin texto adicional. SÃ© especÃ­fico y realista sobre la CDMX.`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -90,3 +90,4 @@ Responde ÚNICAMENTE con el JSON, sin texto adicional. Sé específico y realist
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) }
   }
 }
+
