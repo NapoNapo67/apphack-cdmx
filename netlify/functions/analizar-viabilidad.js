@@ -1,4 +1,4 @@
-﻿const Anthropic = require('@anthropic-ai/sdk')
+const Anthropic = require('@anthropic-ai/sdk')
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -8,20 +8,20 @@ exports.handler = async (event) => {
   try {
     const { giro, alcaldia, tipo_persona, contexto_giro, contexto_zona } = JSON.parse(event.body)
 
-    const prompt = `Eres un experto en desarrollo econÃ³mico, normatividad mercantil y anÃ¡lisis de mercado de la Ciudad de MÃ©xico (CDMX), con conocimiento profundo del RETYS, SIAPEM, SEDUVI y la Ley de Establecimientos Mercantiles.
+    const prompt = `Eres un experto en desarrollo economico, normatividad mercantil y analisis de mercado de la Ciudad de Mexico (CDMX), con conocimiento profundo del RETYS, SIAPEM, SEDUVI y la Ley de Establecimientos Mercantiles.
 
 Un emprendedor quiere abrir el siguiente negocio:
 
 NEGOCIO:
 - Tipo de giro: ${giro.nombre} (${giro.clave})
-- DescripciÃ³n del emprendedor: "${giro.descripcion_libre}"
-- CategorÃ­a SCIAN: ${giro.clave_scian || 'N/A'}
+- Descripcion del emprendedor: "${giro.descripcion_libre}"
+- Categoria SCIAN: ${giro.clave_scian || 'N/A'}
 - Estructura legal elegida: ${tipo_persona.nombre}
 
-UBICACIÃ“N:
-- AlcaldÃ­a: ${alcaldia.nombre}
+UBICACION:
+- Alcaldia: ${alcaldia.nombre}
 - Colonia / zona: ${alcaldia.colonia || 'No especificada'}
-- Uso de suelo permitido en la zona (SEDUVI): ${contexto_zona.uso_suelo || 'No verificado aÃºn'}
+- Uso de suelo permitido en la zona (SEDUVI): ${contexto_zona.uso_suelo || 'No verificado aun'}
 - Usos de suelo compatibles con este giro: ${giro.uso_suelo_ok?.join(', ') || 'COM, COM_S, MIX'}
 
 DATOS DE CONTEXTO DE LA ZONA:
@@ -30,14 +30,14 @@ ${JSON.stringify(contexto_zona, null, 2)}
 DATOS DEL GIRO:
 ${JSON.stringify(contexto_giro, null, 2)}
 
-Proporciona un anÃ¡lisis estructurado en JSON con exactamente este formato:
+Proporciona un analisis estructurado en JSON con exactamente este formato:
 
 {
-  "score": <nÃºmero del 0 al 100>,
+  "score": <numero del 0 al 100>,
   "nivel": "<ALTO|MEDIO|BAJO|MUY_BAJO>",
   "resumen": "<2-3 oraciones de resumen ejecutivo>",
   "uso_suelo_compatible": <true|false>,
-  "uso_suelo_explicacion": "<explicaciÃ³n de compatibilidad>",
+  "uso_suelo_explicacion": "<explicacion de compatibilidad>",
   "oportunidades": [
     "<oportunidad 1>",
     "<oportunidad 2>",
@@ -50,24 +50,24 @@ Proporciona un anÃ¡lisis estructurado en JSON con exactamente este formato:
   ],
   "competencia": {
     "nivel": "<ALTA|MEDIA|BAJA>",
-    "descripcion": "<descripciÃ³n de la competencia en la zona>",
-    "estimado_competidores": <nÃºmero estimado>
+    "descripcion": "<descripcion de la competencia en la zona>",
+    "estimado_competidores": <numero estimado>
   },
   "demanda": {
     "nivel": "<ALTA|MEDIA|BAJA>",
-    "descripcion": "<descripciÃ³n de la demanda esperada>"
+    "descripcion": "<descripcion de la demanda esperada>"
   },
   "inversion_estimada": {
-    "min": <nÃºmero en pesos>,
-    "max": <nÃºmero en pesos>,
-    "descripcion": "<quÃ© incluye esta estimaciÃ³n>"
+    "min": <numero en pesos>,
+    "max": <numero en pesos>,
+    "descripcion": "<que incluye esta estimacion>"
   },
-  "tiempo_apertura_meses": <nÃºmero>,
-  "recomendacion_zona": "<recomendaciÃ³n especÃ­fica sobre la zona o si sugiere otra zona>",
-  "tip_clave": "<el consejo mÃ¡s importante para este emprendedor especÃ­fico>"
+  "tiempo_apertura_meses": <numero>,
+  "recomendacion_zona": "<recomendacion especifica sobre la zona o si sugiere otra zona>",
+  "tip_clave": "<el consejo mas importante para este emprendedor especifico>"
 }
 
-Responde ÃšNICAMENTE con el JSON, sin texto adicional. SÃ© especÃ­fico y realista sobre la CDMX.`
+Responde UNICAMENTE con el JSON, sin texto adicional. Se especifico y realista sobre la CDMX.`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -76,7 +76,6 @@ Responde ÃšNICAMENTE con el JSON, sin texto adicional. SÃ© especÃ­fico y r
     })
 
     const texto = response.content[0].text.trim()
-    // Extraer JSON aunque venga con ```
     const jsonMatch = texto.match(/\{[\s\S]*\}/)
     const analisis = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(texto)
 
@@ -90,4 +89,3 @@ Responde ÃšNICAMENTE con el JSON, sin texto adicional. SÃ© especÃ­fico y r
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) }
   }
 }
-
