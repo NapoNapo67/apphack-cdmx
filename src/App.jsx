@@ -7,24 +7,31 @@ import AgenteOperativo from './components/agents/AgenteOperativo'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import { signInWithGoogle } from './lib/auth'
 
-// Lazy loading para chunks separados (Recharts + Leaflet son pesados)
+const Spin = () => <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" /></div>
+
+// Lazy loading — cada módulo es un chunk separado
 const Dashboard       = lazy(() => import('./pages/index'))
 const Mapa            = lazy(() => import('./pages/mapa'))
 const Tramites        = lazy(() => import('./pages/tramites'))
 const Inconsistencias = lazy(() => import('./pages/inconsistencias'))
 const Carga           = lazy(() => import('./pages/carga'))
 const Analitica       = lazy(() => import('./pages/analitica'))
-
-const Spin = () => (
-  <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" /></div>
-)
+const Viabilidad      = lazy(() => import('./pages/viabilidad'))
+const RutaTramites    = lazy(() => import('./pages/ruta-tramites'))
+const Programas       = lazy(() => import('./pages/programas'))
 
 const PAGES = {
   dashboard:       <Dashboard />,
+  // Reto 1 — Radar CDMX
   mapa:            <Mapa />,
   tramites:        <Tramites />,
   inconsistencias: <Inconsistencias />,
   carga:           <Carga />,
+  // Reto 2 — Viabilidad
+  viabilidad:      <Viabilidad />,
+  'ruta-tramites': <RutaTramites />,
+  programas:       <Programas />,
+  // BI
   analitica:       <Analitica />,
 }
 
@@ -33,10 +40,10 @@ function LoginScreen() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gov-gris px-4">
       <div className="tricolor w-full fixed top-0" />
       <div className="card-gov max-w-md w-full text-center py-12">
-        <div className="text-5xl mb-4">🗺️</div>
-        <h1 className="text-2xl font-bold text-gov-verde mb-1">Radar CDMX</h1>
-        <p className="text-sm text-gray-400 mb-1">SEDECO — Análisis Territorial</p>
-        <p className="text-gray-500 text-sm mb-8">Plataforma de datos geoespaciales de la Ciudad de México</p>
+        <div className="text-5xl mb-4">🏛️</div>
+        <h1 className="text-2xl font-bold text-gov-verde mb-1">AppHack CDMX</h1>
+        <p className="text-sm text-gray-400 mb-1">SEDECO — Plataforma de Gobierno Digital</p>
+        <p className="text-gray-500 text-sm mb-8">Herramientas de análisis territorial y viabilidad económica</p>
         <button onClick={signInWithGoogle} className="btn-gov w-full py-3 flex items-center justify-center gap-3">
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -46,7 +53,6 @@ function LoginScreen() {
           </svg>
           Entrar con Google — SEDECO CDMX
         </button>
-        <p className="text-xs text-gray-400 mt-6">Solo funcionarios autorizados del Gobierno CDMX</p>
       </div>
       <div className="tricolor w-full fixed bottom-0" />
     </div>
@@ -56,15 +62,12 @@ function LoginScreen() {
 export default function App() {
   const { user, authLoading, activeTab } = useApp()
 
-  if (authLoading) return (
-    <div className="min-h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>
-  )
-
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>
   if (!user) return <LoginScreen />
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header projectName="Radar CDMX — SEDECO" />
+      <Header projectName="SEDECO CDMX — AppHack" />
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
@@ -73,7 +76,7 @@ export default function App() {
           </Suspense>
         </main>
       </div>
-      <Footer projectName="Radar CDMX" />
+      <Footer projectName="SEDECO AppHack" />
       <AgenteOperativo />
     </div>
   )

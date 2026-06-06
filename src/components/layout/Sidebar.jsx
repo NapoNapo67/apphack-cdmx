@@ -1,12 +1,18 @@
 import { useApp } from '../../context/AppContext'
 
 const NAV_ITEMS = [
-  { id: 'dashboard',        label: 'Dashboard',           icon: '📊' },
-  { id: 'mapa',             label: 'Mapa Territorial',    icon: '🗺️' },
-  { id: 'tramites',         label: 'Establecimientos',    icon: '🏢' },
-  { id: 'inconsistencias',  label: 'Inconsistencias',     icon: '⚠️' },
-  { id: 'carga',            label: 'Carga de Datos',      icon: '📤' },
-  { id: 'analitica',        label: 'Analítica BI',        icon: '📈' },
+  { id: 'dashboard',       label: 'Dashboard',           icon: '📊', grupo: null },
+  // Reto 1 — Radar CDMX
+  { id: 'mapa',            label: 'Mapa Territorial',    icon: '🗺️', grupo: 'Radar CDMX' },
+  { id: 'tramites',        label: 'Establecimientos',    icon: '🏢', grupo: 'Radar CDMX' },
+  { id: 'inconsistencias', label: 'Inconsistencias',     icon: '⚠️', grupo: 'Radar CDMX' },
+  { id: 'carga',           label: 'Carga de Datos',      icon: '📤', grupo: 'Radar CDMX' },
+  // Reto 2 — Viabilidad
+  { id: 'viabilidad',      label: 'Evaluador IA',        icon: '🚀', grupo: 'Viabilidad' },
+  { id: 'ruta-tramites',   label: 'Ruta de Trámites',    icon: '📋', grupo: 'Viabilidad' },
+  { id: 'programas',       label: 'Programas de Apoyo',  icon: '🎯', grupo: 'Viabilidad' },
+  // BI
+  { id: 'analitica',       label: 'Analítica BI',        icon: '📈', grupo: 'BI' },
 ]
 
 export default function Sidebar() {
@@ -29,19 +35,30 @@ export default function Sidebar() {
       `}>
         <div className="tricolor w-full" />
         <div className="p-4 font-bold text-lg border-b border-gov-verde">Menú</div>
-        <nav className="flex-1 py-2">
-          {NAV_ITEMS.map(item => (
-            <button
-              key={item.id}
-              onClick={() => { setActiveTab(item.id); setSidebarOpen(false) }}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-gov-verde
-                ${activeTab === item.id ? 'bg-gov-verde border-r-4 border-gov-oro' : ''}
-              `}
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
+        <nav className="flex-1 py-2 overflow-y-auto">
+          {NAV_ITEMS.reduce((acc, item, i) => {
+            const prev = NAV_ITEMS[i - 1]
+            if (item.grupo && item.grupo !== prev?.grupo) {
+              acc.push(
+                <p key={`g-${item.grupo}`} className="px-4 pt-3 pb-1 text-xs font-bold text-green-300 uppercase tracking-wider">
+                  {item.grupo}
+                </p>
+              )
+            }
+            acc.push(
+              <button
+                key={item.id}
+                onClick={() => { setActiveTab(item.id); setSidebarOpen(false) }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors hover:bg-gov-verde
+                  ${activeTab === item.id ? 'bg-gov-verde border-r-4 border-gov-oro' : ''}
+                `}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            )
+            return acc
+          }, [])}
         </nav>
         <div className="p-4 text-xs text-green-300 border-t border-gov-verde">
           AppHack v1.0
