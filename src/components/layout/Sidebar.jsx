@@ -2,16 +2,9 @@ import { useApp } from '../../context/AppContext'
 
 const NAV_ITEMS = [
   { id: 'dashboard',       label: 'Dashboard',           icon: '📊', grupo: null },
-  // Reto 1 — Radar CDMX
-  { id: 'mapa',            label: 'Mapa Territorial',    icon: '🗺️', grupo: 'Radar CDMX' },
-  { id: 'tramites',        label: 'Establecimientos',    icon: '🏢', grupo: 'Radar CDMX' },
-  { id: 'inconsistencias', label: 'Inconsistencias',     icon: '⚠️', grupo: 'Radar CDMX' },
-  { id: 'carga',           label: 'Carga de Datos',      icon: '📤', grupo: 'Radar CDMX' },
-  // Reto 2 — Viabilidad
   { id: 'viabilidad',      label: 'Evaluador IA',        icon: '🚀', grupo: 'Viabilidad' },
   { id: 'ruta-tramites',   label: 'Ruta de Trámites',    icon: '📋', grupo: 'Viabilidad' },
   { id: 'programas',       label: 'Programas de Apoyo',  icon: '🎯', grupo: 'Viabilidad' },
-  // BI
   { id: 'analitica',       label: 'Analítica BI',        icon: '📈', grupo: 'BI' },
 ]
 
