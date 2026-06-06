@@ -144,7 +144,7 @@ SELECT DISTINCT
   DATE_TRUNC('month', fecha)::DATE AS fecha_inicio,
   (DATE_TRUNC('month', fecha) + INTERVAL '1 month' - INTERVAL '1 day')::DATE AS fecha_fin,
   EXTRACT(DAY FROM (DATE_TRUNC('month', fecha) + INTERVAL '1 month' - INTERVAL '1 day'))::INTEGER AS dias_calendario,
-  NULL AS dias_habiles,
+  NULL::INTEGER AS dias_habiles,
   mes_anio_etiqueta, trimestre_etiqueta, semestre_etiqueta
 FROM dw.dim_tiempo_dia
 ON CONFLICT DO NOTHING;
