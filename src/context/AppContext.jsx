@@ -10,7 +10,7 @@ const USUARIO_DEMO = {
 }
 
 export function AppProvider({ children }) {
-  const [user, setUser]                       = useState(null)
+  const [user, setUser]                       = useState(USUARIO_DEMO)
   const [sidebarOpen, setSidebarOpen]         = useState(false)
   const [activeTab, setActiveTab]             = useState('inicio')
   const [busquedaInicial, setBusquedaInicial] = useState('')

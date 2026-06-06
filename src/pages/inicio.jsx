@@ -128,12 +128,6 @@ export default function Inicio({ onAnalizar }) {
           dudas.siapem@sedeco.cdmx.gob.mx
         </a>
       </p>
-      <button
-        onClick={login}
-        className="mt-4 text-xs text-gray-300 hover:text-gray-400 transition-colors underline underline-offset-2"
-      >
-        Acceso funcionarios →
-      </button>
     </div>
   )
 }
