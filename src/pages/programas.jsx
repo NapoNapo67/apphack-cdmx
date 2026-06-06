@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSupabase } from '../hooks/useSupabase'
+import { FB_PROGRAMAS, FB_TIPOS_PROGRAMA } from '../lib/fallback-data'
 
 const TIPO_ICON = {
   FINANCIAMIENTO: '💰', CAPACITACION: '📚', INCUBACION: '🚀',
@@ -7,8 +8,10 @@ const TIPO_ICON = {
 }
 
 export default function Programas() {
-  const { data: programas } = useSupabase('programa_emprendimiento', { order: 'orden' })
-  const { data: tipos }     = useSupabase('cat_programa_tipo', { order: 'orden' })
+  const { data: _programas } = useSupabase('programa_emprendimiento', { order: 'orden' })
+  const { data: _tipos }     = useSupabase('cat_programa_tipo', { order: 'orden' })
+  const programas = _programas.length ? _programas : FB_PROGRAMAS
+  const tipos     = _tipos.length     ? _tipos     : FB_TIPOS_PROGRAMA
   const [filtroTipo, setFiltroTipo] = useState('TODOS')
   const [busqueda, setBusqueda]     = useState('')
 

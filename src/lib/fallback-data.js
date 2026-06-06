@@ -68,11 +68,72 @@ export const FB_TRAMITES = [
   { id:'t-10', clave:'APERTURA',  nombre:'Aviso de Apertura Municipal / Alcaldía',             dependencia_id:'dep-8', dependencia_corto:'Alcaldía',   tipo_clave:'AVISO',       costo_descripcion:'$500–$2,000',    plazo_dias:3,  es_digital:false, es_obligatorio:false, descripcion:'Notificación a la Alcaldía de tu inicio de operaciones. Complementa los trámites del SIAPEM en algunos giros.',                 url_tramite:'', documentos:'["Identificación oficial","Comprobante de domicilio del negocio","RFC","Licencia SIAPEM"]' },
 ]
 
+export const FB_TIPOS_PROGRAMA = [
+  { id:'tp-1', clave:'FINANCIAMIENTO', nombre:'Financiamiento', orden:1 },
+  { id:'tp-2', clave:'CAPACITACION',   nombre:'Capacitación',   orden:2 },
+  { id:'tp-3', clave:'INCUBACION',     nombre:'Incubación',     orden:3 },
+  { id:'tp-4', clave:'SUBSIDIO',       nombre:'Subsidio',       orden:4 },
+  { id:'tp-5', clave:'VINCULACION',    nombre:'Vinculación',    orden:5 },
+  { id:'tp-6', clave:'ESPACIO',        nombre:'Espacio',        orden:6 },
+]
+
 export const FB_PROGRAMAS = [
-  { id:'pr-01', clave:'FONDESO',      nombre:'FONDESO — Fondo de Desarrollo Social',          monto_descripcion:'Hasta $200,000 a tasa cero',           destacado:true,  descripcion:'Crédito para micro y pequeñas empresas de la CDMX. Sin aval, sin garantía prendaria. Plazo hasta 36 meses.' },
-  { id:'pr-02', clave:'EMPRENDE_MX',  nombre:'EmprendeCDMX — Capital Semilla',                monto_descripcion:'$30,000–$150,000 no reembolsable',       destacado:true,  descripcion:'Apoyo económico para emprendedores en etapa inicial. Incluye mentoría y acompañamiento de 6 meses.' },
-  { id:'pr-03', clave:'MUJERES_EMP',  nombre:'Programa Mujeres Emprendedoras SEDECO',         monto_descripcion:'Hasta $100,000 + capacitación',          destacado:false, descripcion:'Apoyo integral para mujeres emprendedoras de la CDMX con enfoque en sectores de alimentos, comercio y servicios.' },
-  { id:'pr-04', clave:'CENPROIN',     nombre:'CENPROIN — Asesoría Empresarial Gratuita',       monto_descripcion:'Gratuito (Narvarte, Lun-Vie 9-14:30h)',  destacado:true,  descripcion:'Centro de asesoría gratuita de SEDECO: trámites, financiamiento, plan de negocios. Presencial y por videollamada.' },
-  { id:'pr-05', clave:'CAPACITA_DIG', nombre:'Capacitación Digital para Negocios',             monto_descripcion:'Gratuito',                               destacado:false, descripcion:'Cursos gratuitos en marketing digital, e-commerce, contabilidad básica y redes sociales para emprendedores.' },
-  { id:'pr-06', clave:'INCUBADORA',   nombre:'Red de Incubadoras SEDECO',                      monto_descripcion:'Gratuito + espacio de trabajo',          destacado:false, descripcion:'Acceso a incubadoras de negocios con mentoría especializada, coworking y networking con otros emprendedores.' },
+  { id:'pr-01', clave:'FONDESO',       nombre:'FONDESO — Fondo de Desarrollo Social',           tipo_id:'tp-1', monto_descripcion:'Hasta $200,000 a tasa cero',            monto_min:10000,  monto_max:200000, destacado:true,  anos_operacion_max:null, requiere_plan_negocio:true,  requiere_rfc:true,  convocatoria_url:'https://fondeso.cdmx.gob.mx', descripcion:'Crédito para micro y pequeñas empresas de la CDMX. Sin aval, sin garantía prendaria. Plazo hasta 36 meses. Para comercio, servicios e industria.' },
+  { id:'pr-02', clave:'EMPRENDE_MX',   nombre:'EmprendeCDMX — Capital Semilla',                 tipo_id:'tp-4', monto_descripcion:'$30,000–$150,000 no reembolsable',        monto_min:30000,  monto_max:150000, destacado:true,  anos_operacion_max:2,    requiere_plan_negocio:true,  requiere_rfc:true,  convocatoria_url:'https://sedeco.cdmx.gob.mx/emprendecdmx', descripcion:'Apoyo económico no reembolsable para emprendedores en etapa inicial. Incluye mentoría y acompañamiento de 6 meses con expertos del sector.' },
+  { id:'pr-03', clave:'MUJERES_EMP',   nombre:'Mujeres Emprendedoras SEDECO',                   tipo_id:'tp-4', monto_descripcion:'Hasta $100,000 + capacitación gratuita',  monto_min:0,      monto_max:100000, destacado:true,  anos_operacion_max:5,    requiere_plan_negocio:true,  requiere_rfc:true,  convocatoria_url:'https://sedeco.cdmx.gob.mx/mujeres', descripcion:'Apoyo integral para mujeres emprendedoras de la CDMX. Enfocado en alimentos, comercio, servicios de belleza y tecnología. Incluye asesoría financiera.' },
+  { id:'pr-04', clave:'CENPROIN',      nombre:'CENPROIN — Asesoría Empresarial Gratuita',        tipo_id:'tp-2', monto_descripcion:'Gratuito · Narvarte, Lun-Vie 9-14:30h',  monto_min:0,      monto_max:0,      destacado:true,  anos_operacion_max:null, requiere_plan_negocio:false, requiere_rfc:false, convocatoria_url:'', descripcion:'Centro Promotor de Inversión de SEDECO. Asesoría gratuita en trámites, financiamiento, plan de negocios y apertura de empresa. Presencial y videollamada.' },
+  { id:'pr-05', clave:'CAPACITA_DIG',  nombre:'Capacitación Digital para Negocios',              tipo_id:'tp-2', monto_descripcion:'Gratuito',                                monto_min:0,      monto_max:0,      destacado:false, anos_operacion_max:null, requiere_plan_negocio:false, requiere_rfc:true,  convocatoria_url:'https://sedeco.cdmx.gob.mx/capacitacion', descripcion:'Cursos en marketing digital, e-commerce, redes sociales, contabilidad básica y atención al cliente. Modalidad híbrida, lunes a viernes.' },
+  { id:'pr-06', clave:'INCUBADORA',    nombre:'Red de Incubadoras SEDECO',                       tipo_id:'tp-3', monto_descripcion:'Gratuito + espacio de coworking',         monto_min:0,      monto_max:0,      destacado:false, anos_operacion_max:2,    requiere_plan_negocio:true,  requiere_rfc:false, convocatoria_url:'https://sedeco.cdmx.gob.mx/incubadoras', descripcion:'Acceso a 12 incubadoras de negocios en la CDMX. Mentoría especializada, coworking, networking y vinculación con inversionistas ángel.' },
+  { id:'pr-07', clave:'CREDITO_MUJER', nombre:'Crédito a la Palabra — Mujeres',                 tipo_id:'tp-1', monto_descripcion:'$25,000 a tasa preferencial',             monto_min:25000,  monto_max:25000,  destacado:false, anos_operacion_max:null, requiere_plan_negocio:false, requiere_rfc:true,  convocatoria_url:'', descripcion:'Crédito federal de $25,000 sin aval para mujeres que quieran iniciar o expandir su negocio. Tasa 0% el primer año para negocios nuevos.' },
+  { id:'pr-08', clave:'MERCADOS',      nombre:'Programa de Modernización de Mercados',           tipo_id:'tp-4', monto_descripcion:'Hasta $500,000 en mejoras',               monto_min:0,      monto_max:500000, destacado:false, anos_operacion_max:null, requiere_plan_negocio:false, requiere_rfc:true,  convocatoria_url:'', descripcion:'Apoyo para locatarios de mercados públicos de la CDMX para modernizar sus instalaciones, equipo de refrigeración y sistemas de pago electrónico.' },
+  { id:'pr-09', clave:'VINCULA_EMP',   nombre:'Vinculación Empresarial SEDECO',                  tipo_id:'tp-5', monto_descripcion:'Gratuito',                                monto_min:0,      monto_max:0,      destacado:false, anos_operacion_max:null, requiere_plan_negocio:false, requiere_rfc:true,  convocatoria_url:'', descripcion:'Programa de conexión entre emprendedores y grandes empresas, proveedores, exportadores y cámaras de comercio. Ferias y ruedas de negocios mensuales.' },
+  { id:'pr-10', clave:'COWORK_GOB',    nombre:'Espacios de Coworking Gobierno CDMX',             tipo_id:'tp-6', monto_descripcion:'Desde $800/mes',                          monto_min:800,    monto_max:3000,   destacado:false, anos_operacion_max:null, requiere_plan_negocio:false, requiere_rfc:true,  convocatoria_url:'', descripcion:'Red de 8 espacios de coworking subsidiados por el Gobierno CDMX en colonias estratégicas. Internet, sala de juntas, impresión y área de descanso incluidos.' },
+]
+
+// Datos analíticos mock para demo (Analítica BI)
+export const FB_KPI = {
+  total: 1284, resueltos: 891, en_proceso: 247, pendientes: 146,
+  pct_resueltos: 69, promedio_dias: 11, total_mes_actual: 143, total_mes_anterior: 118,
+}
+export const FB_TENDENCIA = [
+  { periodo:'2025-07', total:72,  resueltos:48  },
+  { periodo:'2025-08', total:89,  resueltos:61  },
+  { periodo:'2025-09', total:95,  resueltos:67  },
+  { periodo:'2025-10', total:108, resueltos:79  },
+  { periodo:'2025-11', total:121, resueltos:88  },
+  { periodo:'2025-12', total:134, resueltos:96  },
+  { periodo:'2026-01', total:98,  resueltos:71  },
+  { periodo:'2026-02', total:115, resueltos:84  },
+  { periodo:'2026-03', total:127, resueltos:93  },
+  { periodo:'2026-04', total:139, resueltos:101 },
+  { periodo:'2026-05', total:131, resueltos:97  },
+  { periodo:'2026-06', total:143, resueltos:107 },
+]
+export const FB_POR_ALCALDIA = [
+  { nombre_corto:'Iztapalapa',    total:198, resueltos:134 },
+  { nombre_corto:'Cuauhtémoc',   total:187, resueltos:129 },
+  { nombre_corto:'GAM',          total:156, resueltos:108 },
+  { nombre_corto:'Álvaro Obr.',  total:132, resueltos:94  },
+  { nombre_corto:'Benito Juárez',total:121, resueltos:89  },
+  { nombre_corto:'Coyoacán',     total:108, resueltos:79  },
+  { nombre_corto:'Tlalpan',      total:97,  resueltos:71  },
+  { nombre_corto:'Xochimilco',   total:84,  resueltos:61  },
+  { nombre_corto:'Azcapotzalco', total:79,  resueltos:58  },
+  { nombre_corto:'Iztacalco',    total:72,  resueltos:53  },
+]
+export const FB_POR_TIPO = [
+  { tipo:'Taquería / Fonda',        clave:'TAQUERIA',    total:287, pct_resueltos:74, promedio_dias:1  },
+  { tipo:'Restaurante',              clave:'RESTAURANTE', total:198, pct_resueltos:62, promedio_dias:14 },
+  { tipo:'Tienda de Abarrotes',     clave:'TIENDA_ABAR', total:176, pct_resueltos:81, promedio_dias:1  },
+  { tipo:'Estética / Belleza',      clave:'SALON_BELL',  total:143, pct_resueltos:78, promedio_dias:2  },
+  { tipo:'Bar / Cantina',           clave:'BAR_CANTINA', total:87,  pct_resueltos:41, promedio_dias:38 },
+  { tipo:'Otros',                   clave:'OTROS',       total:393, pct_resueltos:68, promedio_dias:9  },
+]
+export const FB_POR_ESTADO = [
+  { clave:'NUEVO',      nombre:'Nuevo',      total:87,  porcentaje:7,  color_hex:'#6B7280' },
+  { clave:'ASIGNADO',   nombre:'Asignado',   total:112, porcentaje:9,  color_hex:'#3B82F6' },
+  { clave:'EN_PROCESO', nombre:'En Proceso', total:247, porcentaje:19, color_hex:'#F59E0B' },
+  { clave:'PENDIENTE',  nombre:'Pendiente',  total:146, porcentaje:11, color_hex:'#EF4444' },
+  { clave:'RESUELTO',   nombre:'Resuelto',   total:891, porcentaje:69, color_hex:'#10B981' },
+  { clave:'CANCELADO',  nombre:'Cancelado',  total:21,  porcentaje:2,  color_hex:'#9CA3AF' },
 ]

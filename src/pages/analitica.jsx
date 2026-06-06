@@ -6,6 +6,7 @@ import {
 import { useKPIs, useTendencia, usePorAlcaldia, usePorTipo, usePorEstado } from '../hooks/useDW'
 import AgenteAnalitico from '../components/agents/AgenteAnalitico'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import { FB_KPI, FB_TENDENCIA, FB_POR_ALCALDIA, FB_POR_TIPO, FB_POR_ESTADO } from '../lib/fallback-data'
 
 const GOV_VERDE = '#006847'
 const GOV_ROJO  = '#CE1126'
@@ -59,14 +60,19 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Analitica() {
-  const { data: kpisArr,   loading: kL } = useKPIs()
-  const { data: tendencia, loading: tL } = useTendencia()
-  const { data: alcaldias, loading: aL } = usePorAlcaldia()
-  const { data: tipos,     loading: tiL } = usePorTipo()
-  const { data: estados,   loading: eL } = usePorEstado()
+  const { data: _kpisArr }   = useKPIs()
+  const { data: _tendencia } = useTendencia()
+  const { data: _alcaldias } = usePorAlcaldia()
+  const { data: _tipos }     = usePorTipo()
+  const { data: _estados }   = usePorEstado()
 
-  const kpis    = kpisArr?.[0] ?? {}
-  const anyLoad = kL || tL || aL || tiL || eL
+  // Fallback con datos mock realistas si Supabase está vacío
+  const kpis      = (_kpisArr?.length   ? _kpisArr[0]  : FB_KPI)
+  const tendencia = (_tendencia?.length ? _tendencia   : FB_TENDENCIA)
+  const alcaldias = (_alcaldias?.length ? _alcaldias   : FB_POR_ALCALDIA)
+  const tipos     = (_tipos?.length     ? _tipos       : FB_POR_TIPO)
+  const estados   = (_estados?.length   ? _estados     : FB_POR_ESTADO)
+  const anyLoad   = false
 
   // Resumen para el Agente Analítico
   const dataSummary = {
