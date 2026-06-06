@@ -1,11 +1,12 @@
 import { useApp } from '../../context/AppContext'
 
 const NAV_ITEMS = [
-  { id: 'dashboard',   label: 'Dashboard',     icon: '📊' },
-  { id: 'tramites',    label: 'Trámites',       icon: '📋' },
-  { id: 'documentos',  label: 'Documentos',     icon: '📄' },
-  { id: 'automatizar', label: 'Automatizar',    icon: '⚡' },
-  { id: 'analitica',   label: 'Analítica IA',   icon: '🤖' },
+  { id: 'dashboard',        label: 'Dashboard',           icon: '📊' },
+  { id: 'mapa',             label: 'Mapa Territorial',    icon: '🗺️' },
+  { id: 'tramites',         label: 'Establecimientos',    icon: '🏢' },
+  { id: 'inconsistencias',  label: 'Inconsistencias',     icon: '⚠️' },
+  { id: 'carga',            label: 'Carga de Datos',      icon: '📤' },
+  { id: 'analitica',        label: 'Analítica BI',        icon: '📈' },
 ]
 
 export default function Sidebar() {
