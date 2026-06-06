@@ -8,10 +8,30 @@ export const handler = async (event) => {
   try {
     const { giro, tipo_persona, alcaldia, tramites_disponibles, programas_disponibles } = JSON.parse(event.body)
 
-    const prompt = `Eres un experto en trámites mercantiles de la Ciudad de México. Conoces a fondo el RETYS, SIAPEM, la Ley de Establecimientos Mercantiles y los procesos de SEDUVI, SAT, COFEPRIS e IMSS.
+    // Determinar tipo de impacto mercantil y formato SIAPEM correcto
+    const impacto = giro.impacto_mercantil || 'BAJO'
+    const formatoSIAPEM = giro.formato_siapem || 'EM-03'
+    const impactoDesc = {
+      BAJO:    'Bajo Impacto (Art. 35 LEM) → EM-03, GRATUITO, opera al día siguiente',
+      VECINAL: 'Impacto Vecinal (Art. 19 LEM) → EM-11, requiere pago de derechos',
+      ZONAL:   'Impacto Zonal (Art. 27 Bis LEM) → EM-08, requiere APROBACIÓN de la Alcaldía (no es automático)',
+    }[impacto]
+
+    const prompt = `Eres un experto en trámites mercantiles de la Ciudad de México. Conoces a fondo la Ley de Establecimientos Mercantiles (LEM), el SIAPEM, SEDUVI, SAT, COFEPRIS e IMSS.
+
+CLASIFICACIÓN SIAPEM (LEM):
+- EM-03: Bajo Impacto (Art. 35) → gratuito, opera al día siguiente, para abarrotes/estéticas/papelerías/fondas/oficinas
+- EM-11: Impacto Vecinal (Art. 19) → pago de derechos, para restaurantes/hoteles/salones de fiesta
+- EM-08: Impacto Zonal (Art. 27 Bis) → PERMISO que DEBE SER APROBADO por la Alcaldía, para bares/cantinas/antros/discotecas
+
+PROTECCIÓN CIVIL: NO se requiere si el local tiene <100 personas Y ≤250 m² (Art. 10, A, X, LEM)
+
+PRIMER DOCUMENTO SIEMPRE: Certificado Único de Zonificación de Uso de Suelo (SEDUVI, vigencia máx 1 año)
 
 Un emprendedor quiere abrir:
 - Giro: ${giro.nombre} (${giro.clave})
+- Clasificación de impacto mercantil: ${impactoDesc}
+- Formato SIAPEM que le corresponde: ${formatoSIAPEM}
 - Estructura legal: ${tipo_persona.nombre} (${tipo_persona.clave})
 - Alcaldía: ${alcaldia.nombre}
 - ¿Requiere licencia de alcohol?: ${giro.clave === 'BAR_CANTINA' ? 'SÍ' : 'NO'}
