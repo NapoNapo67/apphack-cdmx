@@ -177,9 +177,9 @@ GROUP BY llave_semestre, llave_anio, anio, semestre, semestre_etiqueta
 ON CONFLICT DO NOTHING;
 
 INSERT INTO dw.dim_tiempo_anio
-SELECT DISTINCT
+SELECT
   llave_anio, anio,
-  EXTRACT(DAY FROM (DATE_TRUNC('year', fecha) + INTERVAL '1 year' - INTERVAL '1 day')) = 366 AS es_bisiesto,
+  (anio % 4 = 0 AND (anio % 100 != 0 OR anio % 400 = 0)) AS es_bisiesto,
   MIN(fecha) AS fecha_inicio,
   MAX(fecha) AS fecha_fin,
   COUNT(*)::INTEGER AS dias_calendario,
