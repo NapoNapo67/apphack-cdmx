@@ -1,8 +1,7 @@
-﻿const Anthropic = require('@anthropic-ai/sdk')
+import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-// Giros disponibles en el sistema
 const GIROS = [
   'TAQUERIA','RESTAURANTE','BAR_CANTINA','PANADERIA','TIENDA_ABAR',
   'FARMACIA','SALON_BELL','TALLER_MEC','GIMNASIO','ESCUELA',
@@ -10,14 +9,13 @@ const GIROS = [
   'TECH_STARTUP','VETERINARIA','FERRETERIA','LAVANDERIA','PAPELERIA',
 ]
 
-// AlcaldÃ­as de CDMX
 const ALCALDIAS = [
-  'Azcapotzalco','CoyoacÃ¡n','Cuajimalpa','CuauhtÃ©moc','Gustavo A. Madero',
+  'Azcapotzalco','Coyoacan','Cuajimalpa','Cuauhtemoc','Gustavo A. Madero',
   'Iztacalco','Iztapalapa','Magdalena Contreras','Miguel Hidalgo','Milpa Alta',
-  'Ãlvaro ObregÃ³n','TlÃ¡huac','Tlalpan','Venustiano Carranza','Xochimilco','Benito JuÃ¡rez',
+  'Alvaro Obregon','Tlahuac','Tlalpan','Venustiano Carranza','Xochimilco','Benito Juarez',
 ]
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
   try {
@@ -28,19 +26,19 @@ exports.handler = async (event) => {
       max_tokens: 300,
       messages: [{
         role: 'user',
-        content: `Analiza esta descripciÃ³n de un emprendedor mexicano y extrae informaciÃ³n estructurada.
+        content: `Analiza esta descripcion de un emprendedor mexicano y extrae informacion estructurada.
 
 Texto del emprendedor: "${texto}"
 
-Responde ÃšNICAMENTE con JSON, sin texto adicional:
+Responde UNICAMENTE con JSON, sin texto adicional:
 {
-  "giro_clave": "<una de: ${GIROS.join(', ')} â€” elige la mÃ¡s cercana>",
-  "alcaldia": "<una de: ${ALCALDIAS.join(', ')} â€” si no menciona ninguna, null>",
-  "descripcion_refinada": "<reescribe su idea en 1 oraciÃ³n clara y concreta>",
+  "giro_clave": "<una de: ${GIROS.join(', ')} - elige la mas cercana>",
+  "alcaldia": "<una de: ${ALCALDIAS.join(', ')} - si no menciona ninguna, null>",
+  "descripcion_refinada": "<reescribe su idea en 1 oracion clara y concreta>",
   "palabras_clave": ["<keyword1>", "<keyword2>"]
 }
 
-Si no puedes identificar el giro con certeza, usa el mÃ¡s probable.`,
+Si no puedes identificar el giro con certeza, usa el mas probable.`,
       }],
     })
 
@@ -57,4 +55,3 @@ Si no puedes identificar el giro con certeza, usa el mÃ¡s probable.`,
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) }
   }
 }
-

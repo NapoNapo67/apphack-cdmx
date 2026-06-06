@@ -1,34 +1,34 @@
-﻿const Anthropic = require('@anthropic-ai/sdk')
+import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
   try {
     const { establecimiento, inconsistencia } = JSON.parse(event.body)
 
-    const prompt = `Eres un experto en regulaciÃ³n de uso de suelo de la Ciudad de MÃ©xico (CDMX) y en la normativa de SEDUVI.
+    const prompt = `Eres un experto en regulacion de uso de suelo de la Ciudad de Mexico (CDMX) y en la normativa de SEDUVI.
 
 Analiza la siguiente inconsistencia detectada en un establecimiento y proporciona:
-1. VEREDICTO: Â¿Es realmente una inconsistencia grave, moderada o es un falso positivo?
-2. EXPLICACIÃ“N: Â¿Por quÃ© es un problema (o no)?
-3. RIESGO: Â¿QuÃ© consecuencias legales o econÃ³micas puede tener para el establecimiento y para la alcaldÃ­a?
-4. ACCIÃ“N RECOMENDADA: Paso a paso, Â¿quÃ© debe hacer el funcionario y el propietario?
-5. TRÃMITE APLICABLE: Â¿QuÃ© trÃ¡mite de SEDUVI o SEDECO debe iniciarse?
+1. VEREDICTO: Es realmente una inconsistencia grave, moderada o es un falso positivo?
+2. EXPLICACION: Por que es un problema (o no)?
+3. RIESGO: Que consecuencias legales o economicas puede tener para el establecimiento y para la alcaldia?
+4. ACCION RECOMENDADA: Paso a paso, que debe hacer el funcionario y el propietario?
+5. TRAMITE APLICABLE: Que tramite de SEDUVI o SEDECO debe iniciarse?
 
 DATOS DEL ESTABLECIMIENTO:
 - Nombre: ${establecimiento.nombre}
-- DirecciÃ³n: ${establecimiento.direccion}, ${establecimiento.colonia}
+- Direccion: ${establecimiento.direccion}, ${establecimiento.colonia}
 - Uso de suelo permitido (SEDUVI): ${establecimiento.uso_suelo_real}
-- Uso de suelo en operaciÃ³n real: ${establecimiento.uso_suelo_operacion}
+- Uso de suelo en operacion real: ${establecimiento.uso_suelo_operacion}
 - Clave SCIAN: ${establecimiento.sector}
 
 INCONSISTENCIA DETECTADA:
 - Tipo: ${inconsistencia.tipo}
-- DescripciÃ³n: ${inconsistencia.descripcion}
+- Descripcion: ${inconsistencia.descripcion}
 
-Responde de forma estructurada, clara y profesional. MÃ¡ximo 300 palabras.`
+Responde de forma estructurada, clara y profesional. Maximo 300 palabras.`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -45,4 +45,3 @@ Responde de forma estructurada, clara y profesional. MÃ¡ximo 300 palabras.`
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) }
   }
 }
-

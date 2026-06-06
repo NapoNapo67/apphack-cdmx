@@ -1,4 +1,4 @@
-const Anthropic = require('@anthropic-ai/sdk')
+import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -44,7 +44,7 @@ HAB=solo vivienda, HAB_M=mixto con comercio en PB, COM=comercial, COM_S=corredor
 Respondes siempre en espanol claro y profesional.
 Cuando preguntan que tramite necesitan, PRIMERO clasifica el giro (Bajo/Vecinal/Zonal) y explica el proceso con el formato EM correcto.`
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
   try {
     const { messages = [], system = '', context = {} } = JSON.parse(event.body)

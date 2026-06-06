@@ -1,4 +1,4 @@
-const Anthropic = require('@anthropic-ai/sdk')
+import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -24,7 +24,7 @@ PREGUNTAS QUE PUEDES RESPONDER:
 
 Respondes en espanol. Eres preciso, conciso y util para la toma de decisiones de politica economica.`
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
   try {
     const { messages = [], data_summary = {} } = JSON.parse(event.body)

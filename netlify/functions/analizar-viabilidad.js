@@ -1,8 +1,8 @@
-const Anthropic = require('@anthropic-ai/sdk')
+import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
   try {
@@ -38,16 +38,8 @@ Proporciona un analisis estructurado en JSON con exactamente este formato:
   "resumen": "<2-3 oraciones de resumen ejecutivo>",
   "uso_suelo_compatible": <true|false>,
   "uso_suelo_explicacion": "<explicacion de compatibilidad>",
-  "oportunidades": [
-    "<oportunidad 1>",
-    "<oportunidad 2>",
-    "<oportunidad 3>"
-  ],
-  "riesgos": [
-    "<riesgo 1>",
-    "<riesgo 2>",
-    "<riesgo 3>"
-  ],
+  "oportunidades": ["<oportunidad 1>", "<oportunidad 2>", "<oportunidad 3>"],
+  "riesgos": ["<riesgo 1>", "<riesgo 2>", "<riesgo 3>"],
   "competencia": {
     "nivel": "<ALTA|MEDIA|BAJA>",
     "descripcion": "<descripcion de la competencia en la zona>",
