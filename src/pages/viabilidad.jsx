@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSupabase } from '../hooks/useSupabase'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+
+const MapaViabilidad = lazy(() => import('../components/mapa/MapaViabilidad'))
 
 const SCORE_CONFIG = {
   ALTO:    { label: 'Alta Viabilidad',    color: '#10B981', bg: '#ECFDF5', emoji: '✅', barra: 'bg-green-500' },
@@ -307,6 +309,23 @@ export default function Viabilidad() {
             )}
           </div>
 
+          {/* Mapa de contexto — aparece al elegir alcaldía */}
+          {form.alcaldia_id && giroSeleccionado && (
+            <div className="card-gov">
+              <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color:'var(--gov-guinda)' }}>
+                🗺️ Mapa de tu zona — {alcaldiaSeleccionada?.nombre}
+              </h3>
+              <Suspense fallback={<LoadingSpinner />}>
+                <MapaViabilidad
+                  alcaldia={alcaldiaSeleccionada?.nombre || ''}
+                  giroNombre={giroSeleccionado?.nombre || ''}
+                  giroClave={giroSeleccionado?.clave || ''}
+                  analisis={null}
+                />
+              </Suspense>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button onClick={() => setPaso(1)} className="btn-gov-outline px-6">← Atrás</button>
             <button
@@ -346,6 +365,21 @@ export default function Viabilidad() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Mapa con análisis enriquecido */}
+          <div className="card-gov">
+            <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color:'var(--gov-guinda)' }}>
+              🗺️ Análisis de tu zona — {alcaldiaSeleccionada?.nombre}
+            </h3>
+            <Suspense fallback={<LoadingSpinner />}>
+              <MapaViabilidad
+                alcaldia={alcaldiaSeleccionada?.nombre || ''}
+                giroNombre={giroSeleccionado?.nombre || ''}
+                giroClave={giroSeleccionado?.clave || ''}
+                analisis={analisis}
+              />
+            </Suspense>
           </div>
 
           {/* Métricas */}
