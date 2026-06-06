@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSupabase } from '../hooks/useSupabase'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import { FB_GIROS, FB_PERSONAS, FB_TRAMITES, FB_PROGRAMAS } from '../lib/fallback-data'
 
 const TIPO_COLOR = {
   CONSTITUCION: '#6366F1', FISCAL: '#F59E0B', USO_SUELO: '#10B981',
@@ -83,12 +84,16 @@ function TramiteCard({ tramite, paso, detalle, expanded, onToggle }) {
 }
 
 export default function RutaTramites() {
-  const { data: giros }    = useSupabase('cat_giro_negocio', { order: 'orden' })
-  const { data: personas } = useSupabase('cat_tipo_persona', { order: 'orden' })
-  const { data: tramites } = useSupabase('tramite')
-  const { data: programas }= useSupabase('programa_emprendimiento', { order: 'orden' })
-  const { data: dependen } = useSupabase('cat_dependencia')
-  const { data: tipos }    = useSupabase('cat_tipo_tramite')
+  const { data: _giros }    = useSupabase('cat_giro_negocio', { order: 'orden' })
+  const { data: _personas } = useSupabase('cat_tipo_persona', { order: 'orden' })
+  const { data: _tramites } = useSupabase('tramite')
+  const { data: _programas }= useSupabase('programa_emprendimiento', { order: 'orden' })
+
+  // Fallback si Supabase está vacío
+  const giros    = _giros.length    ? _giros    : FB_GIROS
+  const personas = _personas.length ? _personas : FB_PERSONAS
+  const tramites = _tramites.length ? _tramites : FB_TRAMITES
+  const programas= _programas.length? _programas: FB_PROGRAMAS
 
   const [giroId, setGiroId]       = useState('')
   const [personaClave, setPC]     = useState('')
@@ -100,12 +105,8 @@ export default function RutaTramites() {
   const giroSel = giros.find(g => g.id === giroId)
   const persSel = personas.find(p => p.clave === personaClave)
 
-  // Enriquecer tramites con dependencia y tipo
-  const tramitesEnriq = tramites.map(t => ({
-    ...t,
-    dependencia_corto: dependen.find(d => d.id === t.dependencia_id)?.nombre_corto || '',
-    tipo_clave: tipos.find(ti => ti.id === t.tipo_id)?.clave || '',
-  }))
+  // tramites ya vienen enriquecidos en fallback
+  const tramitesEnriq = tramites
 
   async function generarRuta() {
     if (!giroId || !personaClave) { setError('Selecciona giro y tipo de persona'); return }
