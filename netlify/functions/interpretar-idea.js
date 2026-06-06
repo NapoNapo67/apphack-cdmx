@@ -22,7 +22,7 @@ export const handler = async (event) => {
     const { texto } = JSON.parse(event.body)
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 300,
       messages: [{
         role: 'user',

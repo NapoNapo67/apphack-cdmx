@@ -75,7 +75,7 @@ Genera una respuesta JSON con exactamente este formato:
 Usa solo claves que existan en la lista de tramites disponibles. Responde UNICAMENTE con el JSON.`
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })

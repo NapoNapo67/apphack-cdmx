@@ -32,7 +32,7 @@ export const handler = async (event) => {
       ? `\n\nDatos actuales del sistema:\n${JSON.stringify(data_summary, null, 2)}`
       : '\n\nEl sistema tiene datos de establecimientos y consultas de viabilidad de CDMX.'
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 1024,
       system: SYSTEM + summaryStr,
       messages,

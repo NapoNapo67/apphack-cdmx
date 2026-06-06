@@ -62,7 +62,7 @@ Proporciona un analisis estructurado en JSON con exactamente este formato:
 Responde UNICAMENTE con el JSON, sin texto adicional. Se especifico y realista sobre la CDMX.`
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }],
     })

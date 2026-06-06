@@ -52,7 +52,7 @@ export const handler = async (event) => {
       ? '\n\nContexto actual:\n' + JSON.stringify(context, null, 2)
       : ''
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 1024,
       system: SYSTEM + (system ? '\n\n' + system : '') + contextStr,
       messages,
