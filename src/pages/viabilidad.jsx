@@ -5,6 +5,59 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 const MapaViabilidad = lazy(() => import('../components/mapa/MapaViabilidad'))
 
+// ── DATOS DE RESPALDO (demo sin Supabase) ──────────────────
+const FB_CATEGORIAS = [
+  { id:'cat-1', clave:'ALIMENTOS',   nombre:'Alimentos y Bebidas', icono:'🍽️', orden:1 },
+  { id:'cat-2', clave:'COMERCIO',    nombre:'Comercio',            icono:'🛒', orden:2 },
+  { id:'cat-3', clave:'SERVICIOS',   nombre:'Servicios',           icono:'💼', orden:3 },
+  { id:'cat-4', clave:'SALUD',       nombre:'Salud y Bienestar',   icono:'💊', orden:4 },
+  { id:'cat-5', clave:'TECNOLOGIA',  nombre:'Tecnología',          icono:'💻', orden:5 },
+  { id:'cat-6', clave:'EDUCACION',   nombre:'Educación',           icono:'📚', orden:6 },
+  { id:'cat-7', clave:'TURISMO',     nombre:'Turismo',             icono:'🏨', orden:7 },
+  { id:'cat-8', clave:'MANUFACTURA', nombre:'Manufactura',         icono:'🏭', orden:8 },
+]
+const FB_GIROS = [
+  { id:'g-01', clave:'TAQUERIA',    nombre:'Taquería / Fonda',          categoria_id:'cat-1', nivel_inversion:'BAJO',  meses_tramite:1, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['HAB_M','COM','COM_S','MIX'], riesgo_sanitario:'MEDIO' },
+  { id:'g-02', clave:'RESTAURANTE', nombre:'Restaurante',               categoria_id:'cat-1', nivel_inversion:'MEDIO', meses_tramite:3, impacto_mercantil:'VECINAL',  formato_siapem:'EM-11', uso_suelo_ok:['COM','COM_S','MIX'],         riesgo_sanitario:'MEDIO' },
+  { id:'g-03', clave:'BAR_CANTINA', nombre:'Bar / Cantina / Antro',     categoria_id:'cat-1', nivel_inversion:'ALTO',  meses_tramite:6, impacto_mercantil:'ZONAL',    formato_siapem:'EM-08', uso_suelo_ok:['COM_S','MIX'],               riesgo_sanitario:'ALTO'  },
+  { id:'g-04', clave:'PANADERIA',   nombre:'Panadería / Pastelería',    categoria_id:'cat-1', nivel_inversion:'BAJO',  meses_tramite:1, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['HAB_M','COM','MIX'],         riesgo_sanitario:'BAJO'  },
+  { id:'g-05', clave:'TIENDA_ABAR', nombre:'Tienda de Abarrotes',       categoria_id:'cat-2', nivel_inversion:'BAJO',  meses_tramite:1, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['HAB_M','COM','MIX'],         riesgo_sanitario:'BAJO'  },
+  { id:'g-06', clave:'TIENDA_ROPA', nombre:'Tienda de Ropa / Boutique', categoria_id:'cat-2', nivel_inversion:'MEDIO', meses_tramite:1, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['COM','COM_S','MIX'],         riesgo_sanitario:'BAJO'  },
+  { id:'g-07', clave:'FARMACIA',    nombre:'Farmacia / Botica',         categoria_id:'cat-4', nivel_inversion:'MEDIO', meses_tramite:2, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['HAB_M','COM','MIX'],         riesgo_sanitario:'BAJO'  },
+  { id:'g-08', clave:'SALON_BELL',  nombre:'Estética / Salón de Belleza',categoria_id:'cat-3',nivel_inversion:'BAJO',  meses_tramite:1, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['HAB_M','COM','MIX'],         riesgo_sanitario:'BAJO'  },
+  { id:'g-09', clave:'GIMNASIO',    nombre:'Gimnasio / Deportivo',      categoria_id:'cat-3', nivel_inversion:'ALTO',  meses_tramite:3, impacto_mercantil:'VECINAL',  formato_siapem:'EM-11', uso_suelo_ok:['COM','COM_S','MIX'],         riesgo_sanitario:'BAJO'  },
+  { id:'g-10', clave:'CONSULTORIO', nombre:'Consultorio Médico',        categoria_id:'cat-4', nivel_inversion:'MEDIO', meses_tramite:2, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['HAB_M','COM','MIX'],         riesgo_sanitario:'BAJO'  },
+  { id:'g-11', clave:'TECH_STARTUP',nombre:'Startup / Oficina Tech',    categoria_id:'cat-5', nivel_inversion:'BAJO',  meses_tramite:1, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['COM','COM_S','MIX','EQU'],   riesgo_sanitario:'BAJO'  },
+  { id:'g-12', clave:'ESCUELA',     nombre:'Escuela / Centro de Capacitación',categoria_id:'cat-6',nivel_inversion:'MEDIO',meses_tramite:3,impacto_mercantil:'VECINAL',formato_siapem:'EM-11',uso_suelo_ok:['EQU','COM','MIX'],        riesgo_sanitario:'BAJO'  },
+  { id:'g-13', clave:'HOTEL',       nombre:'Hotel / Hostal',            categoria_id:'cat-7', nivel_inversion:'ALTO',  meses_tramite:4, impacto_mercantil:'VECINAL',  formato_siapem:'EM-11', uso_suelo_ok:['COM','COM_S','MIX'],         riesgo_sanitario:'MEDIO' },
+  { id:'g-14', clave:'TALLER_MEC',  nombre:'Taller Mecánico',           categoria_id:'cat-8', nivel_inversion:'MEDIO', meses_tramite:2, impacto_mercantil:'VECINAL',  formato_siapem:'EM-11', uso_suelo_ok:['IND','COM_S'],               riesgo_sanitario:'MEDIO' },
+  { id:'g-15', clave:'VETERINARIA', nombre:'Veterinaria / Pet Shop',    categoria_id:'cat-4', nivel_inversion:'MEDIO', meses_tramite:2, impacto_mercantil:'BAJO',    formato_siapem:'EM-03', uso_suelo_ok:['HAB_M','COM','MIX'],         riesgo_sanitario:'BAJO'  },
+]
+const FB_PERSONAS = [
+  { id:'p-1', clave:'PF',   nombre:'Persona Física',                      descripcion:'Sin constitución formal. Ideal para micronegocios.',             ventajas:'Más sencillo,Sin notario,Menos costos' },
+  { id:'p-2', clave:'PFAE', nombre:'Persona Física con Actividad Empresarial', descripcion:'Régimen fiscal para emprendedores individuales.',           ventajas:'Deducciones fiscales,Facturación,Créditos IMSS' },
+  { id:'p-3', clave:'SAS',  nombre:'Sociedad por Acciones Simplificada (SAS)', descripcion:'Constitución 100% en línea, sin notario, desde $0.',       ventajas:'Sin notario,En línea,Ideal para socios' },
+  { id:'p-4', clave:'SA',   nombre:'Sociedad Anónima (S.A. de C.V.)',     descripcion:'Estructura formal para negocios con socios e inversión.',         ventajas:'Protección patrimonial,Inversión,Expansión' },
+]
+const FB_ALCALDIAS = [
+  { id:'a-01', clave:'AZC', nombre:'Azcapotzalco',         poblacion_aprox:400161, superficie_km2:33.66 },
+  { id:'a-02', clave:'COY', nombre:'Coyoacán',              poblacion_aprox:614447, superficie_km2:54.4  },
+  { id:'a-03', clave:'CJM', nombre:'Cuajimalpa de Morelos', poblacion_aprox:186391, superficie_km2:74.58 },
+  { id:'a-04', clave:'CUA', nombre:'Cuauhtémoc',            poblacion_aprox:532553, superficie_km2:32.44 },
+  { id:'a-05', clave:'GAM', nombre:'Gustavo A. Madero',     poblacion_aprox:1173351,superficie_km2:88.17 },
+  { id:'a-06', clave:'IZC', nombre:'Iztacalco',             poblacion_aprox:390348, superficie_km2:23.26 },
+  { id:'a-07', clave:'IZP', nombre:'Iztapalapa',            poblacion_aprox:1835486,superficie_km2:117.86},
+  { id:'a-08', clave:'MGC', nombre:'La Magdalena Contreras',poblacion_aprox:239086, superficie_km2:74.58 },
+  { id:'a-09', clave:'MIH', nombre:'Miguel Hidalgo',        poblacion_aprox:364439, superficie_km2:46.99 },
+  { id:'a-10', clave:'MIA', nombre:'Milpa Alta',            poblacion_aprox:137927, superficie_km2:228.8 },
+  { id:'a-11', clave:'AO',  nombre:'Álvaro Obregón',        poblacion_aprox:727034, superficie_km2:96.17 },
+  { id:'a-12', clave:'TLH', nombre:'Tláhuac',               poblacion_aprox:361593, superficie_km2:85.57 },
+  { id:'a-13', clave:'TLP', nombre:'Tlalpan',               poblacion_aprox:677104, superficie_km2:312.0 },
+  { id:'a-14', clave:'VCA', nombre:'Venustiano Carranza',   poblacion_aprox:427263, superficie_km2:33.42 },
+  { id:'a-15', clave:'XOC', nombre:'Xochimilco',            poblacion_aprox:415007, superficie_km2:122.06},
+  { id:'a-16', clave:'BJU', nombre:'Benito Juárez',         poblacion_aprox:434153, superficie_km2:26.63 },
+]
+
 const SCORE_CONFIG = {
   ALTO:    { label: 'Alta Viabilidad',    color: '#10B981', bg: '#ECFDF5', emoji: '✅', barra: 'bg-green-500' },
   MEDIO:   { label: 'Viabilidad Media',   color: '#F59E0B', bg: '#FFFBEB', emoji: '⚠️', barra: 'bg-yellow-500' },
@@ -48,13 +101,19 @@ function BarMetrica({ label, nivel, descripcion }) {
 }
 
 export default function Viabilidad() {
-  const { data: giros }       = useSupabase('cat_giro_negocio', { order: 'orden' })
-  const { data: categorias }  = useSupabase('cat_categoria_giro', { order: 'orden' })
-  const { data: personas }    = useSupabase('cat_tipo_persona', { order: 'orden' })
-  const { data: alcaldias }   = useSupabase('dw.dim_alcaldia', { order: 'nombre' })
+  const { data: _giros }      = useSupabase('cat_giro_negocio',   { order: 'orden' })
+  const { data: _categorias } = useSupabase('cat_categoria_giro', { order: 'orden' })
+  const { data: _personas }   = useSupabase('cat_tipo_persona',   { order: 'orden' })
+  const { data: _alcaldias }  = useSupabase('dw.dim_alcaldia',    { order: 'nombre' })
   const { data: historial, refetch: refetchHistorial } = useSupabase('consulta_viabilidad', {
     order: 'created_at', ascending: false, limit: 5,
   })
+
+  // Usa datos de Supabase si existen, si no usa fallback para demo
+  const giros      = _giros.length      ? _giros      : FB_GIROS
+  const categorias = _categorias.length ? _categorias : FB_CATEGORIAS
+  const personas   = _personas.length   ? _personas   : FB_PERSONAS
+  const alcaldias  = _alcaldias.length  ? _alcaldias  : FB_ALCALDIAS
 
   const [paso, setPaso]     = useState(1)
   const [form, setForm]     = useState({
