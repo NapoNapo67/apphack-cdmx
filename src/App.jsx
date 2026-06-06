@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { useApp } from './context/AppContext'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
@@ -5,8 +6,11 @@ import Sidebar from './components/layout/Sidebar'
 import AgenteOperativo from './components/agents/AgenteOperativo'
 import Dashboard from './pages/index'
 import Admin from './pages/admin'
-import { signInWithGoogle } from './lib/auth'
 import LoadingSpinner from './components/ui/LoadingSpinner'
+import { signInWithGoogle } from './lib/auth'
+
+// Recharts se carga solo cuando el usuario entra a Analítica
+const Analitica = lazy(() => import('./pages/analitica'))
 
 const PlaceholderPage = ({ title, icon, desc }) => (
   <div className="card-gov text-center py-16">
@@ -19,10 +23,10 @@ const PlaceholderPage = ({ title, icon, desc }) => (
 
 const PAGES = {
   dashboard:   <Dashboard />,
-  tramites:    <PlaceholderPage title="Módulo de Trámites" icon="📋" desc="CRUD principal del negocio" />,
+  tramites:    <PlaceholderPage title="Módulo de Trámites"          icon="📋" desc="CRUD principal del negocio" />,
   documentos:  <PlaceholderPage title="Procesamiento de Documentos" icon="📄" desc="Extracción IA de documentos" />,
-  automatizar: <PlaceholderPage title="Automatización" icon="⚡" desc="Flujo extremo a extremo con IA" />,
-  analitica:   <PlaceholderPage title="Analítica Avanzada" icon="📊" desc="6 tableros BI con Data Warehouse" />,
+  automatizar: <PlaceholderPage title="Automatización"              icon="⚡" desc="Flujo extremo a extremo con IA" />,
+  analitica:   <Suspense fallback={<LoadingSpinner size="lg" />}><Analitica /></Suspense>,
 }
 
 function LoginScreen() {
