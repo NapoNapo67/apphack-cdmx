@@ -31,19 +31,35 @@ function ScoreGauge({ score, nivel }) {
   )
 }
 
-function BarMetrica({ label, nivel, descripcion }) {
-  const w = { ALTA: 85, MEDIA: 55, BAJA: 25 }[nivel] || 50
-  const c = { ALTA: 'bg-green-500', MEDIA: 'bg-yellow-500', BAJA: 'bg-red-400' }[nivel] || 'bg-gray-400'
+// Semáforo con barra de progreso hacia 100%
+function MetricaBar({ label, nivel, valor, descripcion, invertir = false }) {
+  const NIVELES = { ALTA: 88, MEDIA: 55, BAJA: 22, ALTO: 88, MEDIO: 55, BAJO: 22 }
+  const pct = valor ?? NIVELES[nivel] ?? 50
+  // Si invertir=true (competencia alta es malo) el color se invierte
+  const colorClass = invertir
+    ? (pct >= 70 ? 'bg-red-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-green-500')
+    : (pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-red-500')
+  const colorHex = invertir
+    ? (pct >= 70 ? '#EF4444' : pct >= 40 ? '#F59E0B' : '#10B981')
+    : (pct >= 70 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444')
+  const semaforo = invertir
+    ? (pct >= 70 ? '🔴' : pct >= 40 ? '🟡' : '🟢')
+    : (pct >= 70 ? '🟢' : pct >= 40 ? '🟡' : '🔴')
   return (
-    <div className="mb-3">
-      <div className="flex justify-between text-xs mb-1">
-        <span className="font-semibold text-gov-gris-oscuro">{label}</span>
-        <span className="text-gray-500">{nivel}</span>
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+          {semaforo} {label}
+        </span>
+        <span className="text-sm font-black" style={{ color: colorHex }}>{pct}%</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full ${c} rounded-full transition-all duration-700`} style={{ width: `${w}%` }} />
+      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${colorClass} rounded-full transition-all duration-1000`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      {descripcion && <p className="text-xs text-gray-400 mt-0.5">{descripcion}</p>}
+      {descripcion && <p className="text-xs text-gray-400 mt-1">{descripcion}</p>}
     </div>
   )
 }
@@ -351,33 +367,110 @@ export default function Viabilidad() {
       {/* ── PASO 3: Resultados ─────────────────────────── */}
       {paso === 3 && analisis && (
         <div className="space-y-4">
-          {/* Header de resultado */}
+
+          {/* Score + resumen */}
           <div className="card-gov" style={{ borderTop: `4px solid ${SCORE_CONFIG[analisis.nivel]?.color}` }}>
             <div className="flex flex-col md:flex-row items-center gap-6">
               <ScoreGauge score={analisis.score} nivel={analisis.nivel} />
-              <div className="flex-1 text-center md:text-left">
+              <div className="flex-1">
                 <p className="text-xs text-gray-400 mb-1">
                   {giroSeleccionado?.nombre} · {alcaldiaSeleccionada?.nombre} · {personaSeleccionada?.nombre}
                 </p>
-                <p className="text-base font-medium text-gov-texto">{analisis.resumen}</p>
-                {analisis.uso_suelo_compatible === false && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                    ⚠️ {analisis.uso_suelo_explicacion}
-                  </div>
-                )}
-                {analisis.uso_suelo_compatible === true && (
-                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
-                    ✅ {analisis.uso_suelo_explicacion}
-                  </div>
-                )}
+                <p className="text-sm font-medium text-gov-texto">{analisis.resumen}</p>
+                <div className={`mt-2 p-2 rounded text-xs ${analisis.uso_suelo_compatible ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                  {analisis.uso_suelo_compatible ? '✅' : '⚠️'} {analisis.uso_suelo_explicacion}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Mapa con análisis enriquecido */}
+          {/* Recomendación IA — punto de vista del agente */}
+          <div className="card-gov" style={{ borderLeft:'4px solid var(--gov-guinda)', background:'#fdf5f7' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">🤖</span>
+              <p className="font-bold text-sm" style={{ color:'var(--gov-guinda)' }}>Punto de vista de la IA</p>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">{analisis.tip_clave}</p>
+            {analisis.recomendacion_zona && (
+              <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">📍 {analisis.recomendacion_zona}</p>
+            )}
+          </div>
+
+          {/* Indicadores con semáforo + barra hacia 100% */}
+          <div className="card-gov">
+            <h3 className="font-bold mb-4" style={{ color:'var(--gov-guinda)' }}>📊 Indicadores de Viabilidad</h3>
+            <MetricaBar
+              label="Viabilidad general"
+              valor={analisis.score}
+              descripcion="Puntuación global del negocio en esta zona"
+            />
+            <MetricaBar
+              label="Demanda del mercado"
+              nivel={analisis.demanda?.nivel}
+              descripcion={analisis.demanda?.descripcion}
+            />
+            <MetricaBar
+              label="Nivel de competencia"
+              nivel={analisis.competencia?.nivel}
+              invertir={true}
+              descripcion={`~${analisis.competencia?.estimado_competidores || '?'} competidores directos · ${analisis.competencia?.descripcion}`}
+            />
+            <MetricaBar
+              label="Compatibilidad de uso de suelo"
+              valor={analisis.uso_suelo_compatible ? 90 : 20}
+              descripcion={analisis.uso_suelo_explicacion}
+            />
+            <MetricaBar
+              label="Facilidad de trámites"
+              valor={giroSeleccionado?.impacto_mercantil === 'BAJO' ? 92 : giroSeleccionado?.impacto_mercantil === 'VECINAL' ? 58 : 25}
+              descripcion={`Formato SIAPEM: ${giroSeleccionado?.formato_siapem} · ~${giroSeleccionado?.meses_tramite} mes(es)`}
+            />
+          </div>
+
+          {/* Estimaciones + inversión */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="card-gov">
+              <h3 className="font-bold text-green-600 mb-3">✅ Oportunidades</h3>
+              <ul className="space-y-1.5">
+                {analisis.oportunidades?.map((o, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <span className="text-green-500 flex-shrink-0 mt-0.5">▸</span>{o}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="card-gov">
+              <h3 className="font-bold text-red-500 mb-3">⚠️ Riesgos</h3>
+              <ul className="space-y-1.5">
+                {analisis.riesgos?.map((r, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <span className="text-red-400 flex-shrink-0 mt-0.5">▸</span>{r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Inversión y tiempo */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card-gov text-center py-4">
+              <p className="text-xs text-gray-400 mb-1">💰 Inversión estimada</p>
+              <p className="text-lg font-black" style={{ color:'var(--gov-guinda)' }}>
+                ${analisis.inversion_estimada?.min?.toLocaleString()} – ${analisis.inversion_estimada?.max?.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">{analisis.inversion_estimada?.descripcion}</p>
+            </div>
+            <div className="card-gov text-center py-4">
+              <p className="text-xs text-gray-400 mb-1">⏱ Tiempo apertura</p>
+              <p className="text-lg font-black text-gray-700">{analisis.tiempo_apertura_meses} meses</p>
+              <p className="text-xs text-gray-400 mt-1">Incluye todos los trámites</p>
+            </div>
+          </div>
+
+          {/* Mapa */}
           <div className="card-gov">
             <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color:'var(--gov-guinda)' }}>
-              🗺️ Análisis de tu zona — {alcaldiaSeleccionada?.nombre}
+              🗺️ Tu zona — {alcaldiaSeleccionada?.nombre}
             </h3>
             <Suspense fallback={<LoadingSpinner />}>
               <MapaViabilidad
@@ -389,84 +482,16 @@ export default function Viabilidad() {
             </Suspense>
           </div>
 
-          {/* Métricas */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="card-gov">
-              <h3 className="font-bold text-gov-verde mb-3">📊 Indicadores de Mercado</h3>
-              <BarMetrica label="Demanda estimada"       nivel={analisis.demanda?.nivel}     descripcion={analisis.demanda?.descripcion} />
-              <BarMetrica label="Nivel de competencia"   nivel={analisis.competencia?.nivel} descripcion={`~${analisis.competencia?.estimado_competidores || '?'} competidores · ${analisis.competencia?.descripcion}`} />
-            </div>
-            <div className="card-gov">
-              <h3 className="font-bold text-gov-verde mb-3">💰 Estimaciones</h3>
-              <div className="space-y-3">
-                <div className="p-3 bg-gov-verde-claro rounded-lg">
-                  <p className="text-xs text-gray-500">Inversión estimada</p>
-                  <p className="text-xl font-black text-gov-verde">
-                    ${analisis.inversion_estimada?.min?.toLocaleString()} –
-                    ${analisis.inversion_estimada?.max?.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-400">{analisis.inversion_estimada?.descripcion}</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Tiempo para apertura</p>
-                  <p className="text-xl font-black text-gov-gris-oscuro">{analisis.tiempo_apertura_meses} meses</p>
-                  <p className="text-xs text-gray-400">Incluyendo todos los trámites</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Oportunidades y Riesgos */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="card-gov">
-              <h3 className="font-bold text-green-600 mb-3">✅ Oportunidades</h3>
-              <ul className="space-y-2">
-                {analisis.oportunidades?.map((o, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-green-500 mt-0.5 flex-shrink-0">▸</span>
-                    {o}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="card-gov">
-              <h3 className="font-bold text-red-500 mb-3">⚠️ Riesgos a considerar</h3>
-              <ul className="space-y-2">
-                {analisis.riesgos?.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-red-400 mt-0.5 flex-shrink-0">▸</span>
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Tip clave + Recomendación zona */}
-          {(analisis.tip_clave || analisis.recomendacion_zona) && (
-            <div className="card-gov border-l-4 border-l-gov-oro bg-amber-50">
-              <p className="font-bold text-gov-oro mb-1">💡 Consejo clave de la IA</p>
-              <p className="text-sm">{analisis.tip_clave}</p>
-              {analisis.recomendacion_zona && (
-                <p className="text-sm text-gray-600 mt-2">{analisis.recomendacion_zona}</p>
-              )}
-            </div>
-          )}
-
           {/* Acciones */}
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => { setPaso(1); setAnalisis(null); setForm({ giro_id:'', giro_libre:'', tipo_persona:'', alcaldia_id:'', colonia:'', categoria:'' }) }}
               className="btn-gov-outline"
-            >
-              ← Nueva consulta
-            </button>
+            >← Nueva consulta</button>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('nav', { detail: 'ruta-tramites' }))}
               className="btn-gov flex-1"
-            >
-              📋 Ver ruta de trámites →
-            </button>
+            >📋 Ver ruta de trámites →</button>
           </div>
         </div>
       )}

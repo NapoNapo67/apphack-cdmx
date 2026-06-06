@@ -41,8 +41,16 @@ CENPROIN: Av. Cuauhtemoc 899, Narvarte, Benito Juarez. Lunes a viernes 9:00-14:3
 USOS DE SUELO CDMX (SEDUVI):
 HAB=solo vivienda, HAB_M=mixto con comercio en PB, COM=comercial, COM_S=corredor urbano, IND=industrial, EQU=equipamiento, VER=area verde, MIX=mixto.
 
-Respondes siempre en espanol claro y profesional.
-Cuando preguntan que tramite necesitan, PRIMERO clasifica el giro (Bajo/Vecinal/Zonal) y explica el proceso con el formato EM correcto.`
+ESTILO DE RESPUESTA:
+- Maximo 4-5 oraciones por respuesta. Sé directo y concreto.
+- Usa viñetas cortas (max 3 puntos) cuando listes cosas.
+- NUNCA escribas parrafos largos. Si necesitas mas detalle, el usuario preguntara.
+- Siempre termina con UNA pregunta de seguimiento o UNA accion concreta.
+
+Cuando preguntan que tramite necesitan:
+1. Clasifica: Bajo/Vecinal/Zonal (1 linea)
+2. Formato EM y si es gratis o no (1 linea)
+3. Primer paso HOY (1 linea)`
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
