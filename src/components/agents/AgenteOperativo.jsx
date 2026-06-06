@@ -35,7 +35,7 @@ export default function AgenteOperativo() {
       <button
         onClick={() => setOpen(!open)}
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-50 flex items-center justify-center text-2xl transition-transform hover:scale-110"
-        style={{ backgroundColor: 'var(--gov-verde)', color: 'white' }}
+        style={{ backgroundColor: 'var(--gov-guinda)', color: 'white' }}
         title="Agente Operativo"
       >
         {open ? '✕' : '🤖'}
@@ -50,7 +50,7 @@ export default function AgenteOperativo() {
           max-sm:bottom-0 max-sm:right-0 max-sm:left-0 max-sm:w-full max-sm:h-[80vh] max-sm:rounded-b-none
         `}>
           {/* Header del chat */}
-          <div className="bg-gov-verde text-white px-4 py-3 flex items-center gap-2">
+          <div className="text-white px-4 py-3 flex items-center gap-2" style={{ backgroundColor:'var(--gov-guinda)' }}>
             <span className="text-xl">🤖</span>
             <div>
               <p className="font-bold text-sm">Agente Operativo</p>
@@ -69,11 +69,14 @@ export default function AgenteOperativo() {
             )}
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
-                  m.role === 'user'
-                    ? 'bg-gov-verde text-white rounded-br-none'
-                    : 'bg-white border border-gov-gris-medio text-gov-texto rounded-bl-none'
-                }`}>
+                <div
+                  className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
+                    m.role === 'user'
+                      ? 'text-white rounded-br-none'
+                      : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'
+                  }`}
+                  style={m.role === 'user' ? { backgroundColor:'var(--gov-guinda)' } : {}}
+                >
                   {m.content}
                 </div>
               </div>
@@ -82,9 +85,9 @@ export default function AgenteOperativo() {
               <div className="flex justify-start">
                 <div className="bg-white border border-gov-gris-medio px-3 py-2 rounded-lg rounded-bl-none">
                   <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-gov-verde rounded-full animate-bounce" style={{animationDelay:'0ms'}}/>
-                    <span className="w-1.5 h-1.5 bg-gov-verde rounded-full animate-bounce" style={{animationDelay:'150ms'}}/>
-                    <span className="w-1.5 h-1.5 bg-gov-verde rounded-full animate-bounce" style={{animationDelay:'300ms'}}/>
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{animationDelay:'0ms', backgroundColor:'var(--gov-guinda)'}}/>
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{animationDelay:'150ms', backgroundColor:'var(--gov-guinda)'}}/>
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{animationDelay:'300ms', backgroundColor:'var(--gov-guinda)'}}/>
                   </span>
                 </div>
               </div>

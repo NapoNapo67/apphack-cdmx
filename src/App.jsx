@@ -32,7 +32,7 @@ export default function App() {
     </div>
   )
 
-  // Sin login: solo la pantalla de inicio con el buscador
+  // Sin login: pantalla de inicio + agente operativo flotante
   if (!user) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-50">
@@ -41,6 +41,7 @@ export default function App() {
           <Inicio />
         </main>
         <Footer projectName="SEDECO — Viabilidad CDMX" />
+        <AgenteOperativo />
       </div>
     )
   }
