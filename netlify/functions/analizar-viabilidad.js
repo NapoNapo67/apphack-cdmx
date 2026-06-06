@@ -6,64 +6,37 @@ export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
   try {
-    const { giro, alcaldia, tipo_persona, contexto_giro, contexto_zona } = JSON.parse(event.body)
+    const { giro, alcaldia, tipo_persona, contexto_giro } = JSON.parse(event.body)
 
-    const prompt = `Eres un experto en desarrollo economico, normatividad mercantil y analisis de mercado de la Ciudad de Mexico (CDMX), con conocimiento profundo del RETYS, SIAPEM, SEDUVI y la Ley de Establecimientos Mercantiles.
+    const prompt = `Analiza la viabilidad de este negocio en CDMX y responde SOLO con JSON valido.
 
-Un emprendedor quiere abrir el siguiente negocio:
+Negocio: ${giro.nombre} en ${alcaldia.nombre}
+Descripcion: "${giro.descripcion_libre || 'Sin descripcion'}"
+Persona juridica: ${tipo_persona?.nombre || 'No especificada'}
+Inversion requerida: ${contexto_giro?.nivel_inversion || 'MEDIO'}
+Meses de tramite: ${contexto_giro?.meses_tramite || 2}
+Usos suelo OK: ${(giro.uso_suelo_ok || ['COM','MIX']).join(',')}
 
-NEGOCIO:
-- Tipo de giro: ${giro.nombre} (${giro.clave})
-- Descripcion del emprendedor: "${giro.descripcion_libre}"
-- Categoria SCIAN: ${giro.clave_scian || 'N/A'}
-- Estructura legal elegida: ${tipo_persona.nombre}
-
-UBICACION:
-- Alcaldia: ${alcaldia.nombre}
-- Colonia / zona: ${alcaldia.colonia || 'No especificada'}
-- Uso de suelo permitido en la zona (SEDUVI): ${contexto_zona.uso_suelo || 'No verificado aun'}
-- Usos de suelo compatibles con este giro: ${giro.uso_suelo_ok?.join(', ') || 'COM, COM_S, MIX'}
-
-DATOS DE CONTEXTO DE LA ZONA:
-${JSON.stringify(contexto_zona, null, 2)}
-
-DATOS DEL GIRO:
-${JSON.stringify(contexto_giro, null, 2)}
-
-Proporciona un analisis estructurado en JSON con exactamente este formato:
-
+Responde SOLO este JSON sin texto adicional:
 {
-  "score": <numero del 0 al 100>,
-  "nivel": "<ALTO|MEDIO|BAJO|MUY_BAJO>",
-  "resumen": "<2-3 oraciones de resumen ejecutivo>",
-  "uso_suelo_compatible": <true|false>,
-  "uso_suelo_explicacion": "<explicacion de compatibilidad>",
-  "oportunidades": ["<oportunidad 1>", "<oportunidad 2>", "<oportunidad 3>"],
-  "riesgos": ["<riesgo 1>", "<riesgo 2>", "<riesgo 3>"],
-  "competencia": {
-    "nivel": "<ALTA|MEDIA|BAJA>",
-    "descripcion": "<descripcion de la competencia en la zona>",
-    "estimado_competidores": <numero estimado>
-  },
-  "demanda": {
-    "nivel": "<ALTA|MEDIA|BAJA>",
-    "descripcion": "<descripcion de la demanda esperada>"
-  },
-  "inversion_estimada": {
-    "min": <numero en pesos>,
-    "max": <numero en pesos>,
-    "descripcion": "<que incluye esta estimacion>"
-  },
-  "tiempo_apertura_meses": <numero>,
-  "recomendacion_zona": "<recomendacion especifica sobre la zona o si sugiere otra zona>",
-  "tip_clave": "<el consejo mas importante para este emprendedor especifico>"
-}
-
-Responde UNICAMENTE con el JSON, sin texto adicional. Se especifico y realista sobre la CDMX.`
+  "score": 72,
+  "nivel": "MEDIO",
+  "resumen": "2-3 oraciones ejecutivas sobre viabilidad real en esta alcaldia",
+  "uso_suelo_compatible": true,
+  "uso_suelo_explicacion": "explicacion breve",
+  "oportunidades": ["op1","op2","op3"],
+  "riesgos": ["riesgo1","riesgo2","riesgo3"],
+  "competencia": {"nivel":"MEDIA","descripcion":"breve","estimado_competidores": 5},
+  "demanda": {"nivel":"ALTA","descripcion":"breve"},
+  "inversion_estimada": {"min":150000,"max":400000,"descripcion":"incluye..."},
+  "tiempo_apertura_meses": 2,
+  "recomendacion_zona": "consejo sobre la zona o mejor zona alternativa",
+  "tip_clave": "el consejo mas importante para este emprendedor"
+}`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 1200,
+      max_tokens: 900,
       messages: [{ role: 'user', content: prompt }],
     })
 
