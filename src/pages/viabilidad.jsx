@@ -1,6 +1,7 @@
 import { useState, lazy, Suspense } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSupabase } from '../hooks/useSupabase'
+import { useApp } from '../context/AppContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { FB_CATEGORIAS, FB_GIROS, FB_PERSONAS, FB_ALCALDIAS } from '../lib/fallback-data'
 
@@ -65,6 +66,7 @@ function MetricaBar({ label, nivel, valor, descripcion, invertir = false }) {
 }
 
 export default function Viabilidad() {
+  const { setActiveTab } = useApp()
   const { data: _giros }      = useSupabase('cat_giro_negocio',   { order: 'orden' })
   const { data: _categorias } = useSupabase('cat_categoria_giro', { order: 'orden' })
   const { data: _personas }   = useSupabase('cat_tipo_persona',   { order: 'orden' })
@@ -535,7 +537,7 @@ export default function Viabilidad() {
               className="btn-gov-outline"
             >← Nueva consulta</button>
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('nav', { detail: 'ruta-tramites' }))}
+              onClick={() => setActiveTab('ruta-tramites')}
               className="btn-gov flex-1"
             >📋 Ver ruta de trámites →</button>
           </div>
