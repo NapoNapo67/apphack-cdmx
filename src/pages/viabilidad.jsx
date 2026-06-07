@@ -84,10 +84,20 @@ export default function Viabilidad() {
   const [paso, setPaso]     = useState(1)
   const [form, setForm]     = useState({
     giro_id: '', giro_libre: '', tipo_persona: '', alcaldia_id: '', colonia: '', categoria: '',
-    // Datos del emprendedor (pre-llenados con Google si está autenticado)
+    // Datos de contacto (pre-llenados con Google)
     nombre:   user?.user_metadata?.full_name || '',
     email:    user?.email || '',
     telefono: '',
+    // Datos demográficos
+    edad: '',
+    genero: '',
+    colonia_residencia: '',
+    alcaldia_residencia_id: '',
+    grado_estudios: '',
+    es_primer_negocio: '',
+    negocios_previos: 0,
+    situacion_laboral: '',
+    fuente_financiamiento: '',
   })
   const [analisis, setAnalisis] = useState(null)
   const [cargando, setCargando] = useState(false)
@@ -181,21 +191,32 @@ export default function Viabilidad() {
 
       setAnalisis(analisisData)
 
-      // Guardar en historial con datos del emprendedor (no bloquea si falla)
+      // Guardar en historial con datos del emprendedor y perfil demográfico
       supabase.from('consulta_viabilidad').insert({
-        giro_id:              form.giro_id,
-        giro_descripcion:     form.giro_libre,
-        tipo_persona_clave:   form.tipo_persona,
-        alcaldia_id:          form.alcaldia_id,
-        colonia:              form.colonia,
-        score_viabilidad:     analisisData.score,
-        nivel_viabilidad:     analisisData.nivel,
-        resumen_ia:           analisisData.resumen,
-        resultado_json:       analisisData,
-        emprendedor_nombre:   form.nombre  || null,
-        emprendedor_email:    form.email   || null,
-        emprendedor_telefono: form.telefono|| null,
-        user_id:              user?.id     || null,
+        giro_id:                  form.giro_id,
+        giro_descripcion:         form.giro_libre,
+        tipo_persona_clave:       form.tipo_persona,
+        alcaldia_id:              form.alcaldia_id,
+        colonia:                  form.colonia,
+        score_viabilidad:         analisisData.score,
+        nivel_viabilidad:         analisisData.nivel,
+        resumen_ia:               analisisData.resumen,
+        resultado_json:           analisisData,
+        // Contacto
+        emprendedor_nombre:       form.nombre   || null,
+        emprendedor_email:        form.email    || null,
+        emprendedor_telefono:     form.telefono || null,
+        user_id:                  user?.id      || null,
+        // Demográficos
+        edad:                     form.edad     ? parseInt(form.edad) : null,
+        genero:                   form.genero   || null,
+        colonia_residencia:       form.colonia_residencia || null,
+        alcaldia_residencia_id:   form.alcaldia_residencia_id || null,
+        grado_estudios:           form.grado_estudios || null,
+        es_primer_negocio:        form.es_primer_negocio === '' ? null : form.es_primer_negocio,
+        negocios_previos:         form.negocios_previos || 0,
+        situacion_laboral:        form.situacion_laboral || null,
+        fuente_financiamiento:    form.fuente_financiamiento || null,
       }).then(() => refetchHistorial()).catch(() => {})
 
       setPaso(3)
@@ -326,12 +347,10 @@ export default function Viabilidad() {
             </div>
           </div>
 
-          {/* Datos del emprendedor */}
+          {/* ── Datos de contacto ── */}
           <div className="card-gov">
-            <h2 className="font-bold text-gov-verde mb-1">Tus datos de contacto</h2>
-            <p className="text-xs text-gray-400 mb-3">
-              Para enviarte el análisis y dar seguimiento a tu consulta
-            </p>
+            <h2 className="font-bold text-gov-verde mb-1">👤 Tus datos de contacto</h2>
+            <p className="text-xs text-gray-400 mb-3">Para enviarte el análisis y dar seguimiento</p>
             {user && (
               <div className="flex items-center gap-2 mb-3 p-2 bg-green-50 rounded-lg border border-green-200">
                 {user.user_metadata?.avatar_url
@@ -342,46 +361,161 @@ export default function Viabilidad() {
                   <p className="text-xs font-semibold text-gov-verde">{user.user_metadata?.full_name || 'Usuario'}</p>
                   <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
-                <span className="ml-auto text-xs text-green-600 font-medium">✓ Verificado con Google</span>
+                <span className="ml-auto text-xs text-green-600 font-medium">✓ Google</span>
               </div>
             )}
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Nombre completo *</label>
-                <input
-                  className="input-gov"
-                  value={form.nombre}
-                  onChange={e => set('nombre', e.target.value)}
-                  placeholder="Tu nombre completo"
-                />
+                <input className="input-gov" value={form.nombre}
+                  onChange={e => set('nombre', e.target.value)} placeholder="Tu nombre completo" />
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Correo electrónico *</label>
-                <input
-                  type="email"
-                  className="input-gov"
-                  value={form.email}
-                  onChange={e => set('email', e.target.value)}
-                  placeholder="correo@ejemplo.com"
-                />
+                <input type="email" className="input-gov" value={form.email}
+                  onChange={e => set('email', e.target.value)} placeholder="correo@ejemplo.com" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono (opcional)</label>
-                <input
-                  type="tel"
-                  className="input-gov"
-                  value={form.telefono}
-                  onChange={e => set('telefono', e.target.value)}
-                  placeholder="55 1234 5678"
-                />
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono</label>
+                <input type="tel" className="input-gov" value={form.telefono}
+                  onChange={e => set('telefono', e.target.value)} placeholder="55 1234 5678" />
               </div>
             </div>
+          </div>
+
+          {/* ── Perfil demográfico ── */}
+          <div className="card-gov">
+            <h2 className="font-bold text-gov-verde mb-1">📊 Tu perfil emprendedor</h2>
+            <p className="text-xs text-gray-400 mb-4">
+              Esta información es estadística y nos ayuda a mejorar los apoyos para emprendedores como tú
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+
+              {/* Edad */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Edad *</label>
+                <input type="number" min="15" max="90" className="input-gov" value={form.edad}
+                  onChange={e => set('edad', e.target.value)} placeholder="Ej: 32" />
+              </div>
+
+              {/* Género */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Género *</label>
+                <select className="input-gov" value={form.genero} onChange={e => set('genero', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="MUJER">Mujer</option>
+                  <option value="HOMBRE">Hombre</option>
+                  <option value="NO_BINARIO">No binario</option>
+                  <option value="PREFIERO_NO_DECIR">Prefiero no decirlo</option>
+                </select>
+              </div>
+
+              {/* Colonia de residencia */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Colonia donde vives</label>
+                <input className="input-gov" value={form.colonia_residencia}
+                  onChange={e => set('colonia_residencia', e.target.value)}
+                  placeholder="Ej: Roma Norte, Del Valle..." />
+              </div>
+
+              {/* Alcaldía de residencia */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Alcaldía donde vives</label>
+                <select className="input-gov" value={form.alcaldia_residencia_id}
+                  onChange={e => set('alcaldia_residencia_id', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  {alcaldias.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                </select>
+              </div>
+
+              {/* Grado de estudios */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Grado de estudios *</label>
+                <select className="input-gov" value={form.grado_estudios}
+                  onChange={e => set('grado_estudios', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="PRIMARIA">Primaria</option>
+                  <option value="SECUNDARIA">Secundaria</option>
+                  <option value="PREPARATORIA">Preparatoria / Bachillerato</option>
+                  <option value="TECNICO">Técnico / Carrera técnica</option>
+                  <option value="LICENCIATURA">Licenciatura</option>
+                  <option value="POSGRADO">Posgrado (Maestría / Doctorado)</option>
+                </select>
+              </div>
+
+              {/* Situación laboral */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Situación laboral actual</label>
+                <select className="input-gov" value={form.situacion_laboral}
+                  onChange={e => set('situacion_laboral', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="EMPLEADO">Empleado(a)</option>
+                  <option value="DESEMPLEADO">Desempleado(a)</option>
+                  <option value="FREELANCE">Freelance / Por cuenta propia</option>
+                  <option value="ESTUDIANTE">Estudiante</option>
+                  <option value="EMPRENDEDOR_ACTIVO">Ya tengo otro negocio</option>
+                </select>
+              </div>
+
+              {/* ¿Es su primer negocio? */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-2 block">¿Es tu primer negocio? *</label>
+                <div className="flex gap-3">
+                  {[['SI', '✅ Sí, el primero'], ['NO', '🔄 Ya tuve o tengo otros']].map(([v, l]) => (
+                    <button key={v} type="button"
+                      onClick={() => { set('es_primer_negocio', v === 'SI'); if (v === 'SI') set('negocios_previos', 0) }}
+                      className={`flex-1 py-2 px-3 rounded-lg border-2 text-xs font-semibold transition-all ${
+                        form.es_primer_negocio === (v === 'SI')
+                          ? 'border-gov-verde bg-gov-verde-claro text-gov-verde'
+                          : 'border-gray-200 text-gray-600 hover:border-gov-verde'
+                      }`}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Negocios previos (solo si no es el primero) */}
+              {form.es_primer_negocio === false && (
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">¿Cuántos negocios has tenido?</label>
+                  <input type="number" min="1" max="20" className="input-gov" value={form.negocios_previos}
+                    onChange={e => set('negocios_previos', parseInt(e.target.value) || 0)}
+                    placeholder="Número de negocios anteriores" />
+                </div>
+              )}
+
+              {/* Fuente de financiamiento */}
+              <div className={form.es_primer_negocio === false ? '' : 'sm:col-span-2'}>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">¿Cómo piensas financiar tu negocio?</label>
+                <select className="input-gov" value={form.fuente_financiamiento}
+                  onChange={e => set('fuente_financiamiento', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="AHORROS">Ahorros propios</option>
+                  <option value="FAMILIA">Apoyo de familia / amigos</option>
+                  <option value="CREDITO_BANCARIO">Crédito bancario</option>
+                  <option value="PROGRAMA_GOBIERNO">Programa de gobierno (SEDECO, INADEM...)</option>
+                  <option value="INVERSIONISTA">Inversionista / Socio</option>
+                  <option value="CROWDFUNDING">Crowdfunding</option>
+                  <option value="COMBINADO">Combinación de fuentes</option>
+                </select>
+              </div>
+
+            </div>
+
+            <p className="text-xs text-gray-400 mt-4 flex items-start gap-1">
+              <span>🔒</span>
+              <span>Tus datos se usan únicamente con fines estadísticos para mejorar políticas de apoyo a emprendedores en CDMX. No se comparten con terceros.</span>
+            </p>
           </div>
 
           <button
             onClick={() => {
               if (!form.giro_id || !form.tipo_persona) { setError('Selecciona el giro y tipo de persona'); return }
               if (!form.nombre || !form.email) { setError('Ingresa tu nombre y correo para continuar'); return }
+              if (!form.edad || !form.genero || !form.grado_estudios) { setError('Completa edad, género y grado de estudios'); return }
+              if (form.es_primer_negocio === '') { setError('Indica si es tu primer negocio'); return }
               setPaso(2); setError(null)
             }}
             className="btn-gov w-full py-3 text-base"
