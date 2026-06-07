@@ -1,26 +1,47 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
 const AppContext = createContext(null)
 
-// Usuario demo para el hackathon — no requiere OAuth
-const USUARIO_DEMO = {
-  id: 'demo-user',
-  email: 'racota.ideas@gmail.com',
-  user_metadata: { full_name: 'Usuario SEDECO', avatar_url: null },
-}
-
 export function AppProvider({ children }) {
-  const [user, setUser]                       = useState(USUARIO_DEMO)
+  const [user, setUser]                       = useState(null)
+  const [authLoading, setAuthLoading]         = useState(true)
   const [sidebarOpen, setSidebarOpen]         = useState(false)
   const [activeTab, setActiveTab]             = useState('inicio')
   const [busquedaInicial, setBusquedaInicial] = useState('')
 
-  const login  = () => setUser(USUARIO_DEMO)
-  const logout = () => { setUser(null); setActiveTab('inicio') }
+  useEffect(() => {
+    // Sesión actual al cargar
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+
+    // Escuchar cambios de sesión (login / logout / token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const login = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+  }
+
+  const logout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setActiveTab('inicio')
+  }
 
   return (
     <AppContext.Provider value={{
-      user, authLoading: false,
+      user, authLoading,
       login, logout,
       sidebarOpen, setSidebarOpen,
       activeTab, setActiveTab,

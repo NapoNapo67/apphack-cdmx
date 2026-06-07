@@ -66,11 +66,11 @@ function MetricaBar({ label, nivel, valor, descripcion, invertir = false }) {
 }
 
 export default function Viabilidad() {
-  const { setActiveTab } = useApp()
+  const { setActiveTab, user } = useApp()
   const { data: _giros }      = useSupabase('cat_giro_negocio',   { order: 'orden' })
   const { data: _categorias } = useSupabase('cat_categoria_giro', { order: 'orden' })
   const { data: _personas }   = useSupabase('cat_tipo_persona',   { order: 'orden' })
-  const { data: _alcaldias }  = useSupabase('dw.dim_alcaldia',    { order: 'nombre' })
+  const { data: _alcaldias }  = useSupabase('cat_alcaldia',       { order: 'nombre' })
   const { data: historial, refetch: refetchHistorial } = useSupabase('consulta_viabilidad', {
     order: 'created_at', ascending: false, limit: 5,
   })
@@ -84,6 +84,10 @@ export default function Viabilidad() {
   const [paso, setPaso]     = useState(1)
   const [form, setForm]     = useState({
     giro_id: '', giro_libre: '', tipo_persona: '', alcaldia_id: '', colonia: '', categoria: '',
+    // Datos del emprendedor (pre-llenados con Google si está autenticado)
+    nombre:   user?.user_metadata?.full_name || '',
+    email:    user?.email || '',
+    telefono: '',
   })
   const [analisis, setAnalisis] = useState(null)
   const [cargando, setCargando] = useState(false)
@@ -177,16 +181,21 @@ export default function Viabilidad() {
 
       setAnalisis(analisisData)
 
-      // Guardar en historial (no bloquea si falla)
+      // Guardar en historial con datos del emprendedor (no bloquea si falla)
       supabase.from('consulta_viabilidad').insert({
-        giro_id:          form.giro_id,
-        giro_descripcion: form.giro_libre,
-        tipo_persona_clave: form.tipo_persona,
-        alcaldia_id:      form.alcaldia_id,
-        colonia:          form.colonia,
-        score_viabilidad: analisisData.score,
-        nivel_viabilidad: analisisData.nivel,
-        resumen_ia:       analisisData.resumen,
+        giro_id:              form.giro_id,
+        giro_descripcion:     form.giro_libre,
+        tipo_persona_clave:   form.tipo_persona,
+        alcaldia_id:          form.alcaldia_id,
+        colonia:              form.colonia,
+        score_viabilidad:     analisisData.score,
+        nivel_viabilidad:     analisisData.nivel,
+        resumen_ia:           analisisData.resumen,
+        resultado_json:       analisisData,
+        emprendedor_nombre:   form.nombre  || null,
+        emprendedor_email:    form.email   || null,
+        emprendedor_telefono: form.telefono|| null,
+        user_id:              user?.id     || null,
       }).then(() => refetchHistorial()).catch(() => {})
 
       setPaso(3)
@@ -317,8 +326,64 @@ export default function Viabilidad() {
             </div>
           </div>
 
+          {/* Datos del emprendedor */}
+          <div className="card-gov">
+            <h2 className="font-bold text-gov-verde mb-1">Tus datos de contacto</h2>
+            <p className="text-xs text-gray-400 mb-3">
+              Para enviarte el análisis y dar seguimiento a tu consulta
+            </p>
+            {user && (
+              <div className="flex items-center gap-2 mb-3 p-2 bg-green-50 rounded-lg border border-green-200">
+                {user.user_metadata?.avatar_url
+                  ? <img src={user.user_metadata.avatar_url} className="w-7 h-7 rounded-full" alt="avatar" />
+                  : <span className="text-lg">👤</span>
+                }
+                <div>
+                  <p className="text-xs font-semibold text-gov-verde">{user.user_metadata?.full_name || 'Usuario'}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
+                </div>
+                <span className="ml-auto text-xs text-green-600 font-medium">✓ Verificado con Google</span>
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Nombre completo *</label>
+                <input
+                  className="input-gov"
+                  value={form.nombre}
+                  onChange={e => set('nombre', e.target.value)}
+                  placeholder="Tu nombre completo"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Correo electrónico *</label>
+                <input
+                  type="email"
+                  className="input-gov"
+                  value={form.email}
+                  onChange={e => set('email', e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono (opcional)</label>
+                <input
+                  type="tel"
+                  className="input-gov"
+                  value={form.telefono}
+                  onChange={e => set('telefono', e.target.value)}
+                  placeholder="55 1234 5678"
+                />
+              </div>
+            </div>
+          </div>
+
           <button
-            onClick={() => { if (!form.giro_id || !form.tipo_persona) { setError('Selecciona el giro y tipo de persona') } else { setPaso(2); setError(null) } }}
+            onClick={() => {
+              if (!form.giro_id || !form.tipo_persona) { setError('Selecciona el giro y tipo de persona'); return }
+              if (!form.nombre || !form.email) { setError('Ingresa tu nombre y correo para continuar'); return }
+              setPaso(2); setError(null)
+            }}
             className="btn-gov w-full py-3 text-base"
           >
             Siguiente: elegir ubicación →
