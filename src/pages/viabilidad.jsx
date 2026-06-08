@@ -107,6 +107,14 @@ export default function Viabilidad() {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
+  // Estas variables deben declararse ANTES de los useCallback que las usan
+  const giroSeleccionado    = giros.find(g => g.id === form.giro_id)
+  const personaSeleccionada = personas.find(p => p.clave === form.tipo_persona)
+  const alcaldiaSeleccionada = alcaldias.find(a => a.id === form.alcaldia_id)
+  const girosFiltrados      = form.categoria
+    ? giros.filter(g => g.categoria_id === form.categoria)
+    : giros
+
   // ── Enviar por Email ────────────────────────────────────────
   const enviarEmail = useCallback(async () => {
     if (!analisis || !form.email) return
@@ -172,14 +180,6 @@ export default function Viabilidad() {
     window.open(url, '_blank')
     setEnviado('whatsapp')
   }, [analisis, form, giroSeleccionado, alcaldiaSeleccionada])
-
-  const girosFiltrados = form.categoria
-    ? giros.filter(g => g.categoria_id === form.categoria)
-    : giros
-
-  const giroSeleccionado = giros.find(g => g.id === form.giro_id)
-  const personaSeleccionada = personas.find(p => p.clave === form.tipo_persona)
-  const alcaldiaSeleccionada = alcaldias.find(a => a.id === form.alcaldia_id)
 
   function mockAnalisis(giro, alcaldia) {
     const scores = { BAJO: 78, MEDIO: 62, ALTO: 42 }

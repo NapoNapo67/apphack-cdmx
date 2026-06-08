@@ -6,7 +6,7 @@ import { FB_GIROS, FB_TRAMITES, FB_PROGRAMAS, FB_KPI } from '../lib/fallback-dat
 export default function Dashboard() {
   const { setActiveTab } = useApp()
   const { data: _giros }     = useSupabase('cat_giro_negocio')
-  const { data: _tramites }  = useSupabase('tramite')
+  const { data: _tramites }  = useSupabase('cat_tramite')
   const { data: _programas } = useSupabase('programa_emprendimiento')
   const { data: _consultas } = useSupabase('consulta_viabilidad')
 
