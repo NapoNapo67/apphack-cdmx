@@ -8,14 +8,15 @@ export default function Dashboard() {
   const { data: _giros }     = useSupabase('cat_giro_negocio')
   const { data: _tramites }  = useSupabase('cat_tramite')
   const { data: _programas } = useSupabase('programa_emprendimiento')
-  const { data: _consultas } = useSupabase('consulta_viabilidad')
+  const { data: _consultas } = useSupabase('consulta_viabilidad', { select: 'id,nivel_viabilidad' })
 
   const giros    = _giros.length    ? _giros    : FB_GIROS
   const tramites = _tramites.length ? _tramites : FB_TRAMITES
   const programas= _programas.length? _programas: FB_PROGRAMAS
-  const consultas= _consultas.length? _consultas: { length: FB_KPI.total }
 
-  const consultasAlto = _consultas.filter ? _consultas.filter(c => c.nivel_viabilidad === 'ALTO').length : FB_KPI.resueltos
+  // KPIs reales de la base de datos
+  const totalConsultas   = _consultas.length
+  const consultasPositivas = _consultas.filter(c => ['ALTO', 'MEDIO'].includes(c.nivel_viabilidad)).length
 
   const ACCESOS = [
     {
@@ -74,7 +75,7 @@ export default function Dashboard() {
         <KPICard title="Tipos de giro"         value={giros.length}          icon="🏪" subtitle="catalogados" />
         <KPICard title="Trámites disponibles"  value={tramites.length}        icon="📄" subtitle="del RETYS/SIAPEM" />
         <KPICard title="Programas de apoyo"    value={programas.length}       icon="🎯" subtitle="SEDECO y federal" />
-        <KPICard title="Consultas realizadas"  value={FB_KPI.total}           icon="📊" subtitle={`${FB_KPI.resueltos} resueltas`} color="oro" />
+        <KPICard title="Consultas realizadas"  value={totalConsultas || '…'}  icon="📊" subtitle={totalConsultas ? `${consultasPositivas} con viabilidad positiva` : 'cargando...'} color="oro" />
       </div>
 
       {/* Accesos rápidos */}

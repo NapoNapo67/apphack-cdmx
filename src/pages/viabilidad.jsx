@@ -72,7 +72,9 @@ export default function Viabilidad() {
   const { data: _personas }   = useSupabase('cat_persona_juridica',   { order: 'orden' })
   const { data: _alcaldias }  = useSupabase('cat_alcaldia',       { order: 'nombre' })
   const { data: historial, refetch: refetchHistorial } = useSupabase('consulta_viabilidad', {
-    order: 'created_at', ascending: false, limit: 5,
+    order: 'created_at', ascending: false, limit: 10,
+    select: 'id,giro_id,alcaldia_id,score_viabilidad,nivel_viabilidad,emprendedor_nombre,emprendedor_email,created_at',
+    ...(user?.id && { filter: { user_id: user.id } }),
   })
 
   // Usa datos de Supabase si existen, si no usa fallback para demo
@@ -882,27 +884,61 @@ export default function Viabilidad() {
         </div>
       )}
 
-      {/* Historial */}
-      {historial.length > 0 && paso === 1 && (
+      {/* Historial de Mis Consultas */}
+      {paso === 1 && (
         <div className="card-gov">
-          <h3 className="font-bold text-gov-verde mb-3">🕐 Consultas recientes</h3>
-          <div className="space-y-2">
-            {historial.map(h => {
-              const cfg = SCORE_CONFIG[h.nivel_viabilidad] || SCORE_CONFIG.MEDIO
-              return (
-                <div key={h.id} className="flex items-center gap-3 p-2 border border-gov-gris-medio rounded-lg text-sm">
-                  <span className="text-xl">{cfg.emoji}</span>
-                  <div className="flex-1">
-                    <p className="font-medium">{giros.find(g => g.id === h.giro_id)?.nombre || 'Giro desconocido'}</p>
-                    <p className="text-xs text-gray-400">{alcaldias.find(a => a.id === h.alcaldia_id)?.nombre} · Score: {h.score_viabilidad}</p>
-                  </div>
-                  <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: cfg.bg, color: cfg.color }}>
-                    {h.nivel_viabilidad}
-                  </span>
-                </div>
-              )
-            })}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-gov-verde">🕐 Mis consultas anteriores</h3>
+            {user && (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                {user.user_metadata?.avatar_url
+                  ? <img src={user.user_metadata.avatar_url} className="w-5 h-5 rounded-full" alt="" />
+                  : <span>👤</span>}
+                {user.user_metadata?.full_name || user.email}
+              </span>
+            )}
           </div>
+
+          {historial.length === 0 ? (
+            <div className="text-center py-6 text-gray-400">
+              <p className="text-3xl mb-2">📋</p>
+              <p className="text-sm">Aún no tienes consultas registradas</p>
+              <p className="text-xs mt-1">Tu historial aparecerá aquí después de tu primera evaluación</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {historial.map(h => {
+                const cfg = SCORE_CONFIG[h.nivel_viabilidad] || SCORE_CONFIG.MEDIO
+                const fecha = h.created_at
+                  ? new Date(h.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+                  : ''
+                return (
+                  <div key={h.id} className="flex items-center gap-3 p-3 border border-gov-gris-medio rounded-lg text-sm hover:border-gov-verde transition-colors">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 font-black border-2"
+                      style={{ borderColor: cfg.color, background: cfg.bg, color: cfg.color }}
+                    >
+                      {h.score_viabilidad ?? '—'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gov-texto truncate">
+                        {giros.find(g => g.id === h.giro_id)?.nombre || 'Giro desconocido'}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        📍 {alcaldias.find(a => a.id === h.alcaldia_id)?.nombre || '—'}
+                        {h.emprendedor_nombre && ` · 👤 ${h.emprendedor_nombre}`}
+                        {fecha && ` · ${fecha}`}
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0"
+                      style={{ background: cfg.bg, color: cfg.color }}>
+                      {cfg.emoji} {h.nivel_viabilidad}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
