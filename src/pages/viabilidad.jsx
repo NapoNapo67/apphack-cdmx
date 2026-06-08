@@ -69,7 +69,7 @@ export default function Viabilidad() {
   const { setActiveTab, user } = useApp()
   const { data: _giros }      = useSupabase('cat_giro_negocio',   { order: 'orden' })
   const { data: _categorias } = useSupabase('cat_categoria_giro', { order: 'orden' })
-  const { data: _personas }   = useSupabase('cat_tipo_persona',   { order: 'orden' })
+  const { data: _personas }   = useSupabase('cat_persona_juridica',   { order: 'orden' })
   const { data: _alcaldias }  = useSupabase('cat_alcaldia',       { order: 'nombre' })
   const { data: historial, refetch: refetchHistorial } = useSupabase('consulta_viabilidad', {
     order: 'created_at', ascending: false, limit: 5,

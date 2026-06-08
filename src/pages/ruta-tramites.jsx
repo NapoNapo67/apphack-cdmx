@@ -85,7 +85,7 @@ function TramiteCard({ tramite, paso, detalle, expanded, onToggle }) {
 
 export default function RutaTramites() {
   const { data: _giros }    = useSupabase('cat_giro_negocio', { order: 'orden' })
-  const { data: _personas } = useSupabase('cat_tipo_persona', { order: 'orden' })
+  const { data: _personas } = useSupabase('cat_persona_juridica', { order: 'orden' })
   const { data: _tramites } = useSupabase('tramite')
   const { data: _programas }= useSupabase('programa_emprendimiento', { order: 'orden' })
 
