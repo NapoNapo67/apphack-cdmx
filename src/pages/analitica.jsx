@@ -61,11 +61,26 @@ export default function Analitica() {
   const tipos     = (_tipos?.length     ? _tipos      : FB_POR_TIPO)
   const estados   = (_estados?.length   ? _estados    : FB_POR_ESTADO)
 
+  // dataSummary con términos inequívocos para el Agente Analítico
   const dataSummary = {
-    total: kpis.total, resueltos: kpis.resueltos,
-    pct_resueltos: kpis.pct_resueltos, promedio_dias: kpis.promedio_dias,
-    mes_actual: kpis.total_mes_actual, mes_anterior: kpis.total_mes_anterior,
-    top_alcaldia: alcaldias?.[0]?.nombre_corto, top_tipo: tipos?.[0]?.tipo,
+    // Totales generales
+    total_consultas: kpis.total,
+    mes_actual: kpis.total_mes_actual,
+    mes_anterior: kpis.total_mes_anterior,
+    // Resultado del análisis IA (≠ estado del trámite)
+    viabilidad_positiva: kpis.viabilidad_positiva,  // ALTO o MEDIO según IA
+    pct_viabilidad_positiva: kpis.pct_viabilidad_positiva,
+    promedio_dias_apertura: kpis.promedio_dias_apertura,
+    // Estado del trámite/workflow (cambia en Gestión Consultas)
+    estado_NUEVO: estados.find(e => e.clave === 'NUEVO')?.total ?? 0,
+    estado_ASIGNADO: estados.find(e => e.clave === 'ASIGNADO')?.total ?? 0,
+    estado_EN_PROCESO: estados.find(e => e.clave === 'EN_PROCESO')?.total ?? 0,
+    estado_PENDIENTE: estados.find(e => e.clave === 'PENDIENTE')?.total ?? 0,
+    estado_RESUELTO: estados.find(e => e.clave === 'RESUELTO')?.total ?? 0,
+    estado_CANCELADO: estados.find(e => e.clave === 'CANCELADO')?.total ?? 0,
+    // Rankings
+    top_alcaldia: alcaldias?.[0]?.nombre_corto,
+    top_tipo_giro: tipos?.[0]?.tipo,
   }
 
   return (
@@ -86,12 +101,23 @@ export default function Analitica() {
           Resumen Ejecutivo
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KPI title="Total consultas"    value={kpis.total?.toLocaleString()}          sub="todos los períodos"               color="guinda" />
-          <KPI title="% Resueltos"        value={`${kpis.pct_resueltos ?? 0}%`}         sub={`${kpis.resueltos?.toLocaleString()} completados`} color="verde" />
-          <KPI title="Días promedio"      value={kpis.promedio_dias}                    sub={`SLA objetivo: ${SLA_DIAS} días`} color={kpis.promedio_dias > SLA_DIAS ? 'rojo' : 'verde'} />
-          <KPI title="Este mes"           value={kpis.total_mes_actual}                 sub={`vs ${kpis.total_mes_anterior} el mes pasado`} color="oro"
-            trend={(kpis.total_mes_actual ?? 0) - (kpis.total_mes_anterior ?? 0)} />
+          <KPI title="Total consultas"       value={kpis.total?.toLocaleString()}
+               sub="todos los períodos"      color="guinda" />
+          <KPI title="Viabilidad favorable"  value={`${kpis.pct_viabilidad_positiva ?? 0}%`}
+               sub={`${kpis.viabilidad_positiva?.toLocaleString() ?? 0} con score ALTO o MEDIO`} color="verde" />
+          <KPI title="Días estimados apertura" value={kpis.promedio_dias_apertura}
+               sub={`Promedio del giro · SLA ${SLA_DIAS}d`}
+               color={kpis.promedio_dias_apertura > SLA_DIAS ? 'rojo' : 'verde'} />
+          <KPI title="Este mes"              value={kpis.total_mes_actual}
+               sub={`vs ${kpis.total_mes_anterior} el mes pasado`} color="oro"
+               trend={(kpis.total_mes_actual ?? 0) - (kpis.total_mes_anterior ?? 0)} />
         </div>
+        {/* Nota aclaratoria */}
+        <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+          ℹ️ <strong>Viabilidad favorable</strong> = resultado del análisis IA (score ALTO o MEDIO).
+          El estado del trámite (RESUELTO, EN PROCESO…) se gestiona en
+          <button className="text-gov-verde underline ml-1" onClick={() => {}}>Gestión Consultas</button>.
+        </p>
       </section>
 
       {/* ── 2: Tendencia mensual ── */}
