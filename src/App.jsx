@@ -16,6 +16,7 @@ const RutaTramites = lazy(() => import('./pages/ruta-tramites'))
 const Programas    = lazy(() => import('./pages/programas'))
 const Analitica    = lazy(() => import('./pages/analitica'))
 const ETLControl   = lazy(() => import('./pages/etl-control'))
+const Gestion      = lazy(() => import('./pages/gestion'))
 
 // Páginas públicas (sin login)
 const PAGES_PUBLICAS = ['viabilidad', 'ruta-tramites', 'programas']
@@ -45,6 +46,7 @@ export default function App() {
              activeTab === 'programas'       ? <Programas />    :
              activeTab === 'analitica'       ? <Analitica />    :
              activeTab === 'etl-control'    ? <ETLControl />   :
+             activeTab === 'gestion'        ? <Gestion />      :
              <Dashboard />}
           </Suspense>
         </main>
