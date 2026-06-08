@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSupabase } from '../hooks/useSupabase'
 import { useApp } from '../context/AppContext'
@@ -99,11 +99,79 @@ export default function Viabilidad() {
     situacion_laboral: '',
     fuente_financiamiento: '',
   })
-  const [analisis, setAnalisis] = useState(null)
-  const [cargando, setCargando] = useState(false)
-  const [error, setError]       = useState(null)
+  const [analisis, setAnalisis]     = useState(null)
+  const [cargando, setCargando]     = useState(false)
+  const [error, setError]           = useState(null)
+  const [enviando, setEnviando]     = useState(false)   // estado envío email
+  const [enviado, setEnviado]       = useState(null)    // 'email' | 'whatsapp' | null
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  // ── Enviar por Email ────────────────────────────────────────
+  const enviarEmail = useCallback(async () => {
+    if (!analisis || !form.email) return
+    setEnviando(true)
+    try {
+      const res = await fetch('/.netlify/functions/enviar-resultado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre:   form.nombre,
+          email:    form.email,
+          giro:     giroSeleccionado?.nombre || '',
+          alcaldia: alcaldiaSeleccionada?.nombre || '',
+          analisis,
+        }),
+      })
+      const data = await res.json()
+      if (data.ok) setEnviado('email')
+      else throw new Error(data.error)
+    } catch (_) {
+      // Fallback: abrir cliente de correo local
+      const asunto = encodeURIComponent(`Análisis de viabilidad: ${giroSeleccionado?.nombre}`)
+      const cuerpo = encodeURIComponent(
+        `Hola ${form.nombre},\n\nAquí está tu análisis de viabilidad:\n\n` +
+        `🏪 Negocio: ${giroSeleccionado?.nombre}\n` +
+        `📍 Alcaldía: ${alcaldiaSeleccionada?.nombre}\n` +
+        `📊 Score: ${analisis.score}/100 (${analisis.nivel})\n\n` +
+        `${analisis.resumen}\n\n` +
+        `💡 Consejo clave: ${analisis.tip_clave}\n\n` +
+        `Ver más en: https://viabilidad-cdmx.netlify.app`
+      )
+      window.open(`mailto:${form.email}?subject=${asunto}&body=${cuerpo}`)
+      setEnviado('email')
+    } finally {
+      setEnviando(false)
+    }
+  }, [analisis, form, giroSeleccionado, alcaldiaSeleccionada])
+
+  // ── Enviar por WhatsApp ─────────────────────────────────────
+  const enviarWhatsApp = useCallback(() => {
+    if (!analisis) return
+    const nivelEmoji = { ALTO: '✅', MEDIO: '⚠️', BAJO: '❌', MUY_BAJO: '🚫' }[analisis.nivel] || '📊'
+    const invMin = (analisis.inversion_estimada?.min || 0).toLocaleString()
+    const invMax = (analisis.inversion_estimada?.max || 0).toLocaleString()
+    const texto =
+      `🏛️ *Análisis de Viabilidad SEDECO CDMX*\n\n` +
+      `Hola ${form.nombre || 'emprendedor'} 👋\n\n` +
+      `🏪 *Negocio:* ${giroSeleccionado?.nombre || ''}\n` +
+      `📍 *Alcaldía:* ${alcaldiaSeleccionada?.nombre || ''}\n\n` +
+      `${nivelEmoji} *Viabilidad: ${analisis.score}/100 — ${analisis.nivel}*\n\n` +
+      `${analisis.resumen}\n\n` +
+      `📌 *Oportunidades:*\n${analisis.oportunidades?.map(o => `• ${o}`).join('\n') || ''}\n\n` +
+      `⚠️ *Riesgos:*\n${analisis.riesgos?.map(r => `• ${r}`).join('\n') || ''}\n\n` +
+      `💰 *Inversión estimada:* $${invMin} – $${invMax} MXN\n` +
+      `⏱️ *Tiempo de apertura:* ${analisis.tiempo_apertura_meses} meses\n\n` +
+      `💡 *Consejo clave:*\n${analisis.tip_clave}\n\n` +
+      `🔗 Ver ruta de trámites: https://viabilidad-cdmx.netlify.app`
+
+    const telefono = form.telefono.replace(/\D/g, '')
+    const url = telefono
+      ? `https://wa.me/52${telefono}?text=${encodeURIComponent(texto)}`
+      : `https://wa.me/?text=${encodeURIComponent(texto)}`
+    window.open(url, '_blank')
+    setEnviado('whatsapp')
+  }, [analisis, form, giroSeleccionado, alcaldiaSeleccionada])
 
   const girosFiltrados = form.categoria
     ? giros.filter(g => g.categoria_id === form.categoria)
@@ -729,10 +797,81 @@ export default function Viabilidad() {
             </Suspense>
           </div>
 
+          {/* ── Compartir resultado ─────────────────────────── */}
+          <div className="card-gov border-2 border-gov-verde">
+            <h3 className="font-bold text-gov-verde mb-1 flex items-center gap-2">
+              📤 Enviar resultado al emprendedor
+            </h3>
+            <p className="text-xs text-gray-400 mb-4">
+              Envía este análisis a <strong className="text-gov-texto">{form.nombre || 'el emprendedor'}</strong> por el canal que prefiera
+            </p>
+
+            {enviado && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+                <span className="text-lg">✅</span>
+                <span>
+                  {enviado === 'email'
+                    ? `Análisis enviado a ${form.email}`
+                    : 'WhatsApp abierto con el análisis listo para enviar'}
+                </span>
+              </div>
+            )}
+
+            <div className="grid sm:grid-cols-2 gap-3">
+
+              {/* Email */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <span className="text-xl">✉️</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700">Correo electrónico</p>
+                    <p className="text-xs text-gray-400 truncate">{form.email || 'Sin email registrado'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={enviarEmail}
+                  disabled={!form.email || enviando}
+                  className="btn-gov py-2.5 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {enviando ? (
+                    <><span className="animate-spin">⏳</span> Enviando...</>
+                  ) : (
+                    <><span>📧</span> Enviar por email</>
+                  )}
+                </button>
+                {!form.email && (
+                  <p className="text-xs text-red-500">El emprendedor no registró su email</p>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <span className="text-xl">💬</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700">WhatsApp</p>
+                    <p className="text-xs text-gray-400">{form.telefono ? `+52 ${form.telefono}` : 'Sin número — se abrirá para compartir'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={enviarWhatsApp}
+                  className="py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                  style={{ background: '#25D366', color: '#fff' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
+                  Enviar por WhatsApp
+                </button>
+              </div>
+
+            </div>
+          </div>
+
           {/* Acciones */}
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => { setPaso(1); setAnalisis(null); setForm({ giro_id:'', giro_libre:'', tipo_persona:'', alcaldia_id:'', colonia:'', categoria:'' }) }}
+              onClick={() => { setPaso(1); setAnalisis(null); setEnviado(null); setForm({ giro_id:'', giro_libre:'', tipo_persona:'', alcaldia_id:'', colonia:'', categoria:'', nombre: user?.user_metadata?.full_name || '', email: user?.email || '', telefono:'', edad:'', genero:'', colonia_residencia:'', alcaldia_residencia_id:'', grado_estudios:'', es_primer_negocio:'', negocios_previos:0, situacion_laboral:'', fuente_financiamiento:'' }) }}
               className="btn-gov-outline"
             >← Nueva consulta</button>
             <button
