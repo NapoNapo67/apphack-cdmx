@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 // Hook genérico para vistas del Data Warehouse (esquema dw)
+// Usa supabase.schema('dw') para enviar Accept-Profile: dw en la cabecera
 function useView(viewName) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -10,7 +11,11 @@ function useView(viewName) {
   useEffect(() => {
     async function fetch() {
       setLoading(true)
-      const { data: rows, error: err } = await supabase.from(viewName).select('*')
+      // .schema('dw') → PostgREST usa Accept-Profile: dw
+      const { data: rows, error: err } = await supabase
+        .schema('dw')
+        .from(viewName)
+        .select('*')
       if (err) setError(err.message)
       else setData(rows)
       setLoading(false)
