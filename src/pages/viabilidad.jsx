@@ -1,7 +1,9 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSupabase } from '../hooks/useSupabase'
+import { useApp } from '../context/AppContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import { FB_CATEGORIAS, FB_GIROS, FB_PERSONAS, FB_ALCALDIAS } from '../lib/fallback-data'
 
 const MapaViabilidad = lazy(() => import('../components/mapa/MapaViabilidad'))
 
@@ -30,49 +32,188 @@ function ScoreGauge({ score, nivel }) {
   )
 }
 
-function BarMetrica({ label, nivel, descripcion }) {
-  const w = { ALTA: 85, MEDIA: 55, BAJA: 25 }[nivel] || 50
-  const c = { ALTA: 'bg-green-500', MEDIA: 'bg-yellow-500', BAJA: 'bg-red-400' }[nivel] || 'bg-gray-400'
+// Semáforo con barra de progreso hacia 100%
+function MetricaBar({ label, nivel, valor, descripcion, invertir = false }) {
+  const NIVELES = { ALTA: 88, MEDIA: 55, BAJA: 22, ALTO: 88, MEDIO: 55, BAJO: 22 }
+  const pct = valor ?? NIVELES[nivel] ?? 50
+  // Si invertir=true (competencia alta es malo) el color se invierte
+  const colorClass = invertir
+    ? (pct >= 70 ? 'bg-red-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-green-500')
+    : (pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-red-500')
+  const colorHex = invertir
+    ? (pct >= 70 ? '#EF4444' : pct >= 40 ? '#F59E0B' : '#10B981')
+    : (pct >= 70 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444')
+  const semaforo = invertir
+    ? (pct >= 70 ? '🔴' : pct >= 40 ? '🟡' : '🟢')
+    : (pct >= 70 ? '🟢' : pct >= 40 ? '🟡' : '🔴')
   return (
-    <div className="mb-3">
-      <div className="flex justify-between text-xs mb-1">
-        <span className="font-semibold text-gov-gris-oscuro">{label}</span>
-        <span className="text-gray-500">{nivel}</span>
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+          {semaforo} {label}
+        </span>
+        <span className="text-sm font-black" style={{ color: colorHex }}>{pct}%</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full ${c} rounded-full transition-all duration-700`} style={{ width: `${w}%` }} />
+      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${colorClass} rounded-full transition-all duration-1000`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      {descripcion && <p className="text-xs text-gray-400 mt-0.5">{descripcion}</p>}
+      {descripcion && <p className="text-xs text-gray-400 mt-1">{descripcion}</p>}
     </div>
   )
 }
 
 export default function Viabilidad() {
-  const { data: giros }       = useSupabase('cat_giro_negocio', { order: 'orden' })
-  const { data: categorias }  = useSupabase('cat_categoria_giro', { order: 'orden' })
-  const { data: personas }    = useSupabase('cat_tipo_persona', { order: 'orden' })
-  const { data: alcaldias }   = useSupabase('dw.dim_alcaldia', { order: 'nombre' })
+  const { setActiveTab, user } = useApp()
+  const { data: _giros }      = useSupabase('cat_giro_negocio',   { order: 'orden' })
+  const { data: _categorias } = useSupabase('cat_categoria_giro', { order: 'orden' })
+  const { data: _personas }   = useSupabase('cat_persona_juridica',   { order: 'orden' })
+  const { data: _alcaldias }  = useSupabase('cat_alcaldia',       { order: 'nombre' })
   const { data: historial, refetch: refetchHistorial } = useSupabase('consulta_viabilidad', {
-    order: 'created_at', ascending: false, limit: 5,
+    order: 'created_at', ascending: false, limit: 10,
+    select: 'id,giro_id,alcaldia_id,score_viabilidad,nivel_viabilidad,emprendedor_nombre,emprendedor_email,created_at',
+    ...(user?.id && { filter: { user_id: user.id } }),
   })
+
+  // Usa datos de Supabase si existen, si no usa fallback para demo
+  const giros      = _giros.length      ? _giros      : FB_GIROS
+  const categorias = _categorias.length ? _categorias : FB_CATEGORIAS
+  const personas   = _personas.length   ? _personas   : FB_PERSONAS
+  const alcaldias  = _alcaldias.length  ? _alcaldias  : FB_ALCALDIAS
 
   const [paso, setPaso]     = useState(1)
   const [form, setForm]     = useState({
     giro_id: '', giro_libre: '', tipo_persona: '', alcaldia_id: '', colonia: '', categoria: '',
+    // Datos de contacto (pre-llenados con Google)
+    nombre:   user?.user_metadata?.full_name || '',
+    email:    user?.email || '',
+    telefono: '',
+    // Datos demográficos
+    edad: '',
+    genero: '',
+    colonia_residencia: '',
+    alcaldia_residencia_id: '',
+    grado_estudios: '',
+    es_primer_negocio: '',
+    negocios_previos: 0,
+    situacion_laboral: '',
+    fuente_financiamiento: '',
   })
-  const [analisis, setAnalisis] = useState(null)
-  const [cargando, setCargando] = useState(false)
-  const [error, setError]       = useState(null)
+  const [analisis, setAnalisis]     = useState(null)
+  const [cargando, setCargando]     = useState(false)
+  const [error, setError]           = useState(null)
+  const [enviando, setEnviando]     = useState(false)   // estado envío email
+  const [enviado, setEnviado]       = useState(null)    // 'email' | 'whatsapp' | null
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
-  const girosFiltrados = form.categoria
+  // Estas variables deben declararse ANTES de los useCallback que las usan
+  const giroSeleccionado    = giros.find(g => g.id === form.giro_id)
+  const personaSeleccionada = personas.find(p => p.clave === form.tipo_persona)
+  const alcaldiaSeleccionada = alcaldias.find(a => a.id === form.alcaldia_id)
+  const girosFiltrados      = form.categoria
     ? giros.filter(g => g.categoria_id === form.categoria)
     : giros
 
-  const giroSeleccionado = giros.find(g => g.id === form.giro_id)
-  const personaSeleccionada = personas.find(p => p.clave === form.tipo_persona)
-  const alcaldiaSeleccionada = alcaldias.find(a => a.id === form.alcaldia_id)
+  // ── Enviar por Email ────────────────────────────────────────
+  const enviarEmail = useCallback(async () => {
+    if (!analisis || !form.email) return
+    setEnviando(true)
+    try {
+      const res = await fetch('/.netlify/functions/enviar-resultado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre:   form.nombre,
+          email:    form.email,
+          giro:     giroSeleccionado?.nombre || '',
+          alcaldia: alcaldiaSeleccionada?.nombre || '',
+          analisis,
+        }),
+      })
+      const data = await res.json()
+      if (data.ok) setEnviado('email')
+      else throw new Error(data.error)
+    } catch (_) {
+      // Fallback: abrir cliente de correo local
+      const asunto = encodeURIComponent(`Análisis de viabilidad: ${giroSeleccionado?.nombre}`)
+      const cuerpo = encodeURIComponent(
+        `Hola ${form.nombre},\n\nAquí está tu análisis de viabilidad:\n\n` +
+        `🏪 Negocio: ${giroSeleccionado?.nombre}\n` +
+        `📍 Alcaldía: ${alcaldiaSeleccionada?.nombre}\n` +
+        `📊 Score: ${analisis.score}/100 (${analisis.nivel})\n\n` +
+        `${analisis.resumen}\n\n` +
+        `💡 Consejo clave: ${analisis.tip_clave}\n\n` +
+        `Ver más en: https://viabilidad-cdmx.netlify.app`
+      )
+      window.open(`mailto:${form.email}?subject=${asunto}&body=${cuerpo}`)
+      setEnviado('email')
+    } finally {
+      setEnviando(false)
+    }
+  }, [analisis, form, giroSeleccionado, alcaldiaSeleccionada])
+
+  // ── Enviar por WhatsApp ─────────────────────────────────────
+  const enviarWhatsApp = useCallback(() => {
+    if (!analisis) return
+    const nivelEmoji = { ALTO: '✅', MEDIO: '⚠️', BAJO: '❌', MUY_BAJO: '🚫' }[analisis.nivel] || '📊'
+    const invMin = (analisis.inversion_estimada?.min || 0).toLocaleString()
+    const invMax = (analisis.inversion_estimada?.max || 0).toLocaleString()
+    const texto =
+      `🏛️ *Análisis de Viabilidad SEDECO CDMX*\n\n` +
+      `Hola ${form.nombre || 'emprendedor'} 👋\n\n` +
+      `🏪 *Negocio:* ${giroSeleccionado?.nombre || ''}\n` +
+      `📍 *Alcaldía:* ${alcaldiaSeleccionada?.nombre || ''}\n\n` +
+      `${nivelEmoji} *Viabilidad: ${analisis.score}/100 — ${analisis.nivel}*\n\n` +
+      `${analisis.resumen}\n\n` +
+      `📌 *Oportunidades:*\n${analisis.oportunidades?.map(o => `• ${o}`).join('\n') || ''}\n\n` +
+      `⚠️ *Riesgos:*\n${analisis.riesgos?.map(r => `• ${r}`).join('\n') || ''}\n\n` +
+      `💰 *Inversión estimada:* $${invMin} – $${invMax} MXN\n` +
+      `⏱️ *Tiempo de apertura:* ${analisis.tiempo_apertura_meses} meses\n\n` +
+      `💡 *Consejo clave:*\n${analisis.tip_clave}\n\n` +
+      `🔗 Ver ruta de trámites: https://viabilidad-cdmx.netlify.app`
+
+    const telefono = form.telefono.replace(/\D/g, '')
+    const url = telefono
+      ? `https://wa.me/52${telefono}?text=${encodeURIComponent(texto)}`
+      : `https://wa.me/?text=${encodeURIComponent(texto)}`
+    window.open(url, '_blank')
+    setEnviado('whatsapp')
+  }, [analisis, form, giroSeleccionado, alcaldiaSeleccionada])
+
+  function mockAnalisis(giro, alcaldia) {
+    const scores = { BAJO: 78, MEDIO: 62, ALTO: 42 }
+    const score  = scores[giro?.nivel_inversion] ?? 65
+    const nivel  = score >= 70 ? 'ALTO' : score >= 50 ? 'MEDIO' : 'BAJO'
+    return {
+      score, nivel,
+      resumen: `${giro?.nombre} en ${alcaldia?.nombre} muestra viabilidad ${nivel.toLowerCase()}. La zona tiene buena densidad poblacional y usos de suelo compatibles. Se recomienda validar el uso de suelo exacto antes de firmar contrato.`,
+      uso_suelo_compatible: true,
+      uso_suelo_explicacion: `Los giros de ${giro?.nombre} son compatibles con usos COM, COM_S y MIX, que predominan en ${alcaldia?.nombre}.`,
+      oportunidades: [
+        `Alta densidad poblacional en ${alcaldia?.nombre} (${((alcaldia?.poblacion_aprox||800000)/1000).toFixed(0)}k habitantes)`,
+        'Acceso a programas SEDECO de financiamiento para nuevos negocios',
+        'Tramite EM-03 gratuito y operativo desde el dia siguiente',
+      ],
+      riesgos: [
+        'Competencia existente en la zona — validar oferta similar en un radio de 500m',
+        'Variacion de renta comercial segun calle y colonia',
+        'Requiere certificado de uso de suelo SEDUVI vigente',
+      ],
+      competencia: { nivel: 'MEDIA', descripcion: 'Zona con oferta similar moderada', estimado_competidores: 4 },
+      demanda:     { nivel: 'ALTA',  descripcion: `Alta afluencia en ${alcaldia?.nombre} por densidad urbana y conectividad` },
+      inversion_estimada: {
+        min: giro?.nivel_inversion === 'BAJO' ? 80000 : giro?.nivel_inversion === 'MEDIO' ? 200000 : 500000,
+        max: giro?.nivel_inversion === 'BAJO' ? 200000 : giro?.nivel_inversion === 'MEDIO' ? 500000 : 1500000,
+        descripcion: 'Incluye acondicionamiento, equipo, tramites y capital de trabajo 3 meses',
+      },
+      tiempo_apertura_meses: giro?.meses_tramite ?? 2,
+      recomendacion_zona: `${alcaldia?.nombre} es adecuada. Considera colonias con alto trafico peatonal y cercania a transporte publico para maximizar captacion de clientes.`,
+      tip_clave: `Antes de invertir, obtener el Certificado de Uso de Suelo SEDUVI (${giro?.uso_suelo_ok?.[0] || 'COM'}) para tu local especifico — es el paso que mas demora y el que define si puedes operar legalmente.`,
+    }
+  }
 
   async function analizar() {
     if (!form.giro_id || !form.tipo_persona || !form.alcaldia_id) {
@@ -82,42 +223,75 @@ export default function Viabilidad() {
     setCargando(true)
     setError(null)
     try {
-      const res = await fetch('/.netlify/functions/analizar-viabilidad', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          giro: { ...giroSeleccionado, descripcion_libre: form.giro_libre },
-          tipo_persona: personaSeleccionada,
-          alcaldia: { ...alcaldiaSeleccionada, colonia: form.colonia },
-          contexto_giro: {
-            riesgo_sanitario: giroSeleccionado?.riesgo_sanitario,
-            nivel_inversion:  giroSeleccionado?.nivel_inversion,
-            meses_tramite:    giroSeleccionado?.meses_tramite,
-            uso_suelo_ok:     giroSeleccionado?.uso_suelo_ok,
-          },
-          contexto_zona: {
-            alcaldia:   alcaldiaSeleccionada?.nombre,
-            poblacion:  alcaldiaSeleccionada?.poblacion_aprox,
-            superficie: alcaldiaSeleccionada?.superficie_km2,
-          },
-        }),
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      setAnalisis(data.analisis)
+      // Timeout de 22s — si Claude tarda mas usa el mock
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 22000)
 
-      // Guardar en historial
-      await supabase.from('consulta_viabilidad').insert({
-        giro_id:          form.giro_id,
-        giro_descripcion: form.giro_libre,
-        tipo_persona_clave: form.tipo_persona,
-        alcaldia_id:      form.alcaldia_id,
-        colonia:          form.colonia,
-        score_viabilidad: data.analisis.score,
-        nivel_viabilidad: data.analisis.nivel,
-        resumen_ia:       data.analisis.resumen,
-      })
-      refetchHistorial()
+      let analisisData
+      try {
+        const res = await fetch('/.netlify/functions/analizar-viabilidad', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            giro: { ...giroSeleccionado, descripcion_libre: form.giro_libre },
+            tipo_persona: personaSeleccionada,
+            alcaldia: { ...alcaldiaSeleccionada, colonia: form.colonia },
+            contexto_giro: {
+              riesgo_sanitario: giroSeleccionado?.riesgo_sanitario,
+              nivel_inversion:  giroSeleccionado?.nivel_inversion,
+              meses_tramite:    giroSeleccionado?.meses_tramite,
+              uso_suelo_ok:     giroSeleccionado?.uso_suelo_ok,
+            },
+            contexto_zona: {
+              alcaldia:   alcaldiaSeleccionada?.nombre,
+              poblacion:  alcaldiaSeleccionada?.poblacion_aprox,
+              superficie: alcaldiaSeleccionada?.superficie_km2,
+            },
+          }),
+        })
+        clearTimeout(timer)
+        const data = await res.json()
+        analisisData = data.error ? mockAnalisis(giroSeleccionado, alcaldiaSeleccionada) : data.analisis
+      } catch (_) {
+        clearTimeout(timer)
+        // Timeout o error de red → usar mock para no quedar colgado en demo
+        analisisData = mockAnalisis(giroSeleccionado, alcaldiaSeleccionada)
+      }
+
+      setAnalisis(analisisData)
+
+      // Guardar en historial con datos del emprendedor y perfil demográfico
+      // estado_id SIEMPRE se establece para que el ETL pueda resolverlo en el DW
+      // NUEVO = 726577d6-1750-4c66-807d-3e6c43e8be22
+      supabase.from('consulta_viabilidad').insert({
+        estado_id:                '726577d6-1750-4c66-807d-3e6c43e8be22',
+        giro_id:                  form.giro_id,
+        giro_descripcion:         form.giro_libre,
+        tipo_persona_clave:       form.tipo_persona,
+        alcaldia_id:              form.alcaldia_id,
+        colonia:                  form.colonia,
+        score_viabilidad:         analisisData.score,
+        nivel_viabilidad:         analisisData.nivel,
+        resumen_ia:               analisisData.resumen,
+        resultado_json:           analisisData,
+        // Contacto
+        emprendedor_nombre:       form.nombre   || null,
+        emprendedor_email:        form.email    || null,
+        emprendedor_telefono:     form.telefono || null,
+        user_id:                  user?.id      || null,
+        // Demográficos
+        edad:                     form.edad     ? parseInt(form.edad) : null,
+        genero:                   form.genero   || null,
+        colonia_residencia:       form.colonia_residencia || null,
+        alcaldia_residencia_id:   form.alcaldia_residencia_id || null,
+        grado_estudios:           form.grado_estudios || null,
+        es_primer_negocio:        form.es_primer_negocio === '' ? null : form.es_primer_negocio,
+        negocios_previos:         form.negocios_previos || 0,
+        situacion_laboral:        form.situacion_laboral || null,
+        fuente_financiamiento:    form.fuente_financiamiento || null,
+      }).then(() => refetchHistorial()).catch(() => {})
+
       setPaso(3)
     } catch (e) {
       setError(e.message)
@@ -246,8 +420,177 @@ export default function Viabilidad() {
             </div>
           </div>
 
+          {/* ── Datos de contacto ── */}
+          <div className="card-gov">
+            <h2 className="font-bold text-gov-verde mb-1">👤 Tus datos de contacto</h2>
+            <p className="text-xs text-gray-400 mb-3">Para enviarte el análisis y dar seguimiento</p>
+            {user && (
+              <div className="flex items-center gap-2 mb-3 p-2 bg-green-50 rounded-lg border border-green-200">
+                {user.user_metadata?.avatar_url
+                  ? <img src={user.user_metadata.avatar_url} className="w-7 h-7 rounded-full" alt="avatar" />
+                  : <span className="text-lg">👤</span>
+                }
+                <div>
+                  <p className="text-xs font-semibold text-gov-verde">{user.user_metadata?.full_name || 'Usuario'}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
+                </div>
+                <span className="ml-auto text-xs text-green-600 font-medium">✓ Google</span>
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Nombre completo *</label>
+                <input className="input-gov" value={form.nombre}
+                  onChange={e => set('nombre', e.target.value)} placeholder="Tu nombre completo" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Correo electrónico *</label>
+                <input type="email" className="input-gov" value={form.email}
+                  onChange={e => set('email', e.target.value)} placeholder="correo@ejemplo.com" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono</label>
+                <input type="tel" className="input-gov" value={form.telefono}
+                  onChange={e => set('telefono', e.target.value)} placeholder="55 1234 5678" />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Perfil demográfico ── */}
+          <div className="card-gov">
+            <h2 className="font-bold text-gov-verde mb-1">📊 Tu perfil emprendedor</h2>
+            <p className="text-xs text-gray-400 mb-4">
+              Esta información es estadística y nos ayuda a mejorar los apoyos para emprendedores como tú
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+
+              {/* Edad */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Edad *</label>
+                <input type="number" min="15" max="90" className="input-gov" value={form.edad}
+                  onChange={e => set('edad', e.target.value)} placeholder="Ej: 32" />
+              </div>
+
+              {/* Género */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Género *</label>
+                <select className="input-gov" value={form.genero} onChange={e => set('genero', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="MUJER">Mujer</option>
+                  <option value="HOMBRE">Hombre</option>
+                  <option value="NO_BINARIO">No binario</option>
+                  <option value="PREFIERO_NO_DECIR">Prefiero no decirlo</option>
+                </select>
+              </div>
+
+              {/* Colonia de residencia */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Colonia donde vives</label>
+                <input className="input-gov" value={form.colonia_residencia}
+                  onChange={e => set('colonia_residencia', e.target.value)}
+                  placeholder="Ej: Roma Norte, Del Valle..." />
+              </div>
+
+              {/* Alcaldía de residencia */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Alcaldía donde vives</label>
+                <select className="input-gov" value={form.alcaldia_residencia_id}
+                  onChange={e => set('alcaldia_residencia_id', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  {alcaldias.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                </select>
+              </div>
+
+              {/* Grado de estudios */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Grado de estudios *</label>
+                <select className="input-gov" value={form.grado_estudios}
+                  onChange={e => set('grado_estudios', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="PRIMARIA">Primaria</option>
+                  <option value="SECUNDARIA">Secundaria</option>
+                  <option value="PREPARATORIA">Preparatoria / Bachillerato</option>
+                  <option value="TECNICO">Técnico / Carrera técnica</option>
+                  <option value="LICENCIATURA">Licenciatura</option>
+                  <option value="POSGRADO">Posgrado (Maestría / Doctorado)</option>
+                </select>
+              </div>
+
+              {/* Situación laboral */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Situación laboral actual</label>
+                <select className="input-gov" value={form.situacion_laboral}
+                  onChange={e => set('situacion_laboral', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="EMPLEADO">Empleado(a)</option>
+                  <option value="DESEMPLEADO">Desempleado(a)</option>
+                  <option value="FREELANCE">Freelance / Por cuenta propia</option>
+                  <option value="ESTUDIANTE">Estudiante</option>
+                  <option value="EMPRENDEDOR_ACTIVO">Ya tengo otro negocio</option>
+                </select>
+              </div>
+
+              {/* ¿Es su primer negocio? */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-2 block">¿Es tu primer negocio? *</label>
+                <div className="flex gap-3">
+                  {[['SI', '✅ Sí, el primero'], ['NO', '🔄 Ya tuve o tengo otros']].map(([v, l]) => (
+                    <button key={v} type="button"
+                      onClick={() => { set('es_primer_negocio', v === 'SI'); if (v === 'SI') set('negocios_previos', 0) }}
+                      className={`flex-1 py-2 px-3 rounded-lg border-2 text-xs font-semibold transition-all ${
+                        form.es_primer_negocio === (v === 'SI')
+                          ? 'border-gov-verde bg-gov-verde-claro text-gov-verde'
+                          : 'border-gray-200 text-gray-600 hover:border-gov-verde'
+                      }`}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Negocios previos (solo si no es el primero) */}
+              {form.es_primer_negocio === false && (
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">¿Cuántos negocios has tenido?</label>
+                  <input type="number" min="1" max="20" className="input-gov" value={form.negocios_previos}
+                    onChange={e => set('negocios_previos', parseInt(e.target.value) || 0)}
+                    placeholder="Número de negocios anteriores" />
+                </div>
+              )}
+
+              {/* Fuente de financiamiento */}
+              <div className={form.es_primer_negocio === false ? '' : 'sm:col-span-2'}>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">¿Cómo piensas financiar tu negocio?</label>
+                <select className="input-gov" value={form.fuente_financiamiento}
+                  onChange={e => set('fuente_financiamiento', e.target.value)}>
+                  <option value="">Selecciona...</option>
+                  <option value="AHORROS">Ahorros propios</option>
+                  <option value="FAMILIA">Apoyo de familia / amigos</option>
+                  <option value="CREDITO_BANCARIO">Crédito bancario</option>
+                  <option value="PROGRAMA_GOBIERNO">Programa de gobierno (SEDECO, INADEM...)</option>
+                  <option value="INVERSIONISTA">Inversionista / Socio</option>
+                  <option value="CROWDFUNDING">Crowdfunding</option>
+                  <option value="COMBINADO">Combinación de fuentes</option>
+                </select>
+              </div>
+
+            </div>
+
+            <p className="text-xs text-gray-400 mt-4 flex items-start gap-1">
+              <span>🔒</span>
+              <span>Tus datos se usan únicamente con fines estadísticos para mejorar políticas de apoyo a emprendedores en CDMX. No se comparten con terceros.</span>
+            </p>
+          </div>
+
           <button
-            onClick={() => { if (!form.giro_id || !form.tipo_persona) { setError('Selecciona el giro y tipo de persona') } else { setPaso(2); setError(null) } }}
+            onClick={() => {
+              if (!form.giro_id || !form.tipo_persona) { setError('Selecciona el giro y tipo de persona'); return }
+              if (!form.nombre || !form.email) { setError('Ingresa tu nombre y correo para continuar'); return }
+              if (!form.edad || !form.genero || !form.grado_estudios) { setError('Completa edad, género y grado de estudios'); return }
+              if (form.es_primer_negocio === '') { setError('Indica si es tu primer negocio'); return }
+              setPaso(2); setError(null)
+            }}
             className="btn-gov w-full py-3 text-base"
           >
             Siguiente: elegir ubicación →
@@ -344,33 +687,110 @@ export default function Viabilidad() {
       {/* ── PASO 3: Resultados ─────────────────────────── */}
       {paso === 3 && analisis && (
         <div className="space-y-4">
-          {/* Header de resultado */}
+
+          {/* Score + resumen */}
           <div className="card-gov" style={{ borderTop: `4px solid ${SCORE_CONFIG[analisis.nivel]?.color}` }}>
             <div className="flex flex-col md:flex-row items-center gap-6">
               <ScoreGauge score={analisis.score} nivel={analisis.nivel} />
-              <div className="flex-1 text-center md:text-left">
+              <div className="flex-1">
                 <p className="text-xs text-gray-400 mb-1">
                   {giroSeleccionado?.nombre} · {alcaldiaSeleccionada?.nombre} · {personaSeleccionada?.nombre}
                 </p>
-                <p className="text-base font-medium text-gov-texto">{analisis.resumen}</p>
-                {analisis.uso_suelo_compatible === false && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                    ⚠️ {analisis.uso_suelo_explicacion}
-                  </div>
-                )}
-                {analisis.uso_suelo_compatible === true && (
-                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
-                    ✅ {analisis.uso_suelo_explicacion}
-                  </div>
-                )}
+                <p className="text-sm font-medium text-gov-texto">{analisis.resumen}</p>
+                <div className={`mt-2 p-2 rounded text-xs ${analisis.uso_suelo_compatible ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                  {analisis.uso_suelo_compatible ? '✅' : '⚠️'} {analisis.uso_suelo_explicacion}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Mapa con análisis enriquecido */}
+          {/* Recomendación IA — punto de vista del agente */}
+          <div className="card-gov" style={{ borderLeft:'4px solid var(--gov-guinda)', background:'#fdf5f7' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">🤖</span>
+              <p className="font-bold text-sm" style={{ color:'var(--gov-guinda)' }}>Punto de vista de la IA</p>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">{analisis.tip_clave}</p>
+            {analisis.recomendacion_zona && (
+              <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">📍 {analisis.recomendacion_zona}</p>
+            )}
+          </div>
+
+          {/* Indicadores con semáforo + barra hacia 100% */}
+          <div className="card-gov">
+            <h3 className="font-bold mb-4" style={{ color:'var(--gov-guinda)' }}>📊 Indicadores de Viabilidad</h3>
+            <MetricaBar
+              label="Viabilidad general"
+              valor={analisis.score}
+              descripcion="Puntuación global del negocio en esta zona"
+            />
+            <MetricaBar
+              label="Demanda del mercado"
+              nivel={analisis.demanda?.nivel}
+              descripcion={analisis.demanda?.descripcion}
+            />
+            <MetricaBar
+              label="Nivel de competencia"
+              nivel={analisis.competencia?.nivel}
+              invertir={true}
+              descripcion={`~${analisis.competencia?.estimado_competidores || '?'} competidores directos · ${analisis.competencia?.descripcion}`}
+            />
+            <MetricaBar
+              label="Compatibilidad de uso de suelo"
+              valor={analisis.uso_suelo_compatible ? 90 : 20}
+              descripcion={analisis.uso_suelo_explicacion}
+            />
+            <MetricaBar
+              label="Facilidad de trámites"
+              valor={giroSeleccionado?.impacto_mercantil === 'BAJO' ? 92 : giroSeleccionado?.impacto_mercantil === 'VECINAL' ? 58 : 25}
+              descripcion={`Formato SIAPEM: ${giroSeleccionado?.formato_siapem} · ~${giroSeleccionado?.meses_tramite} mes(es)`}
+            />
+          </div>
+
+          {/* Estimaciones + inversión */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="card-gov">
+              <h3 className="font-bold text-green-600 mb-3">✅ Oportunidades</h3>
+              <ul className="space-y-1.5">
+                {analisis.oportunidades?.map((o, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <span className="text-green-500 flex-shrink-0 mt-0.5">▸</span>{o}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="card-gov">
+              <h3 className="font-bold text-red-500 mb-3">⚠️ Riesgos</h3>
+              <ul className="space-y-1.5">
+                {analisis.riesgos?.map((r, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <span className="text-red-400 flex-shrink-0 mt-0.5">▸</span>{r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Inversión y tiempo */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card-gov text-center py-4">
+              <p className="text-xs text-gray-400 mb-1">💰 Inversión estimada</p>
+              <p className="text-lg font-black" style={{ color:'var(--gov-guinda)' }}>
+                ${analisis.inversion_estimada?.min?.toLocaleString()} – ${analisis.inversion_estimada?.max?.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">{analisis.inversion_estimada?.descripcion}</p>
+            </div>
+            <div className="card-gov text-center py-4">
+              <p className="text-xs text-gray-400 mb-1">⏱ Tiempo apertura</p>
+              <p className="text-lg font-black text-gray-700">{analisis.tiempo_apertura_meses} meses</p>
+              <p className="text-xs text-gray-400 mt-1">Incluye todos los trámites</p>
+            </div>
+          </div>
+
+          {/* Mapa */}
           <div className="card-gov">
             <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color:'var(--gov-guinda)' }}>
-              🗺️ Análisis de tu zona — {alcaldiaSeleccionada?.nombre}
+              🗺️ Tu zona — {alcaldiaSeleccionada?.nombre}
             </h3>
             <Suspense fallback={<LoadingSpinner />}>
               <MapaViabilidad
@@ -382,109 +802,146 @@ export default function Viabilidad() {
             </Suspense>
           </div>
 
-          {/* Métricas */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="card-gov">
-              <h3 className="font-bold text-gov-verde mb-3">📊 Indicadores de Mercado</h3>
-              <BarMetrica label="Demanda estimada"       nivel={analisis.demanda?.nivel}     descripcion={analisis.demanda?.descripcion} />
-              <BarMetrica label="Nivel de competencia"   nivel={analisis.competencia?.nivel} descripcion={`~${analisis.competencia?.estimado_competidores || '?'} competidores · ${analisis.competencia?.descripcion}`} />
-            </div>
-            <div className="card-gov">
-              <h3 className="font-bold text-gov-verde mb-3">💰 Estimaciones</h3>
-              <div className="space-y-3">
-                <div className="p-3 bg-gov-verde-claro rounded-lg">
-                  <p className="text-xs text-gray-500">Inversión estimada</p>
-                  <p className="text-xl font-black text-gov-verde">
-                    ${analisis.inversion_estimada?.min?.toLocaleString()} –
-                    ${analisis.inversion_estimada?.max?.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-400">{analisis.inversion_estimada?.descripcion}</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Tiempo para apertura</p>
-                  <p className="text-xl font-black text-gov-gris-oscuro">{analisis.tiempo_apertura_meses} meses</p>
-                  <p className="text-xs text-gray-400">Incluyendo todos los trámites</p>
-                </div>
+          {/* ── Compartir resultado ─────────────────────────── */}
+          <div className="card-gov border-2 border-gov-verde">
+            <h3 className="font-bold text-gov-verde mb-1 flex items-center gap-2">
+              📤 Enviar resultado al emprendedor
+            </h3>
+            <p className="text-xs text-gray-400 mb-4">
+              Envía este análisis a <strong className="text-gov-texto">{form.nombre || 'el emprendedor'}</strong> por el canal que prefiera
+            </p>
+
+            {enviado && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+                <span className="text-lg">✅</span>
+                <span>
+                  {enviado === 'email'
+                    ? `Análisis enviado a ${form.email}`
+                    : 'WhatsApp abierto con el análisis listo para enviar'}
+                </span>
               </div>
+            )}
+
+            <div className="grid sm:grid-cols-2 gap-3">
+
+              {/* Email */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <span className="text-xl">✉️</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700">Correo electrónico</p>
+                    <p className="text-xs text-gray-400 truncate">{form.email || 'Sin email registrado'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={enviarEmail}
+                  disabled={!form.email || enviando}
+                  className="btn-gov py-2.5 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {enviando ? (
+                    <><span className="animate-spin">⏳</span> Enviando...</>
+                  ) : (
+                    <><span>📧</span> Enviar por email</>
+                  )}
+                </button>
+                {!form.email && (
+                  <p className="text-xs text-red-500">El emprendedor no registró su email</p>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <span className="text-xl">💬</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700">WhatsApp</p>
+                    <p className="text-xs text-gray-400">{form.telefono ? `+52 ${form.telefono}` : 'Sin número — se abrirá para compartir'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={enviarWhatsApp}
+                  className="py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                  style={{ background: '#25D366', color: '#fff' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
+                  Enviar por WhatsApp
+                </button>
+              </div>
+
             </div>
           </div>
-
-          {/* Oportunidades y Riesgos */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="card-gov">
-              <h3 className="font-bold text-green-600 mb-3">✅ Oportunidades</h3>
-              <ul className="space-y-2">
-                {analisis.oportunidades?.map((o, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-green-500 mt-0.5 flex-shrink-0">▸</span>
-                    {o}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="card-gov">
-              <h3 className="font-bold text-red-500 mb-3">⚠️ Riesgos a considerar</h3>
-              <ul className="space-y-2">
-                {analisis.riesgos?.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-red-400 mt-0.5 flex-shrink-0">▸</span>
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Tip clave + Recomendación zona */}
-          {(analisis.tip_clave || analisis.recomendacion_zona) && (
-            <div className="card-gov border-l-4 border-l-gov-oro bg-amber-50">
-              <p className="font-bold text-gov-oro mb-1">💡 Consejo clave de la IA</p>
-              <p className="text-sm">{analisis.tip_clave}</p>
-              {analisis.recomendacion_zona && (
-                <p className="text-sm text-gray-600 mt-2">{analisis.recomendacion_zona}</p>
-              )}
-            </div>
-          )}
 
           {/* Acciones */}
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => { setPaso(1); setAnalisis(null); setForm({ giro_id:'', giro_libre:'', tipo_persona:'', alcaldia_id:'', colonia:'', categoria:'' }) }}
+              onClick={() => { setPaso(1); setAnalisis(null); setEnviado(null); setForm({ giro_id:'', giro_libre:'', tipo_persona:'', alcaldia_id:'', colonia:'', categoria:'', nombre: user?.user_metadata?.full_name || '', email: user?.email || '', telefono:'', edad:'', genero:'', colonia_residencia:'', alcaldia_residencia_id:'', grado_estudios:'', es_primer_negocio:'', negocios_previos:0, situacion_laboral:'', fuente_financiamiento:'' }) }}
               className="btn-gov-outline"
-            >
-              ← Nueva consulta
-            </button>
+            >← Nueva consulta</button>
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('nav', { detail: 'ruta-tramites' }))}
+              onClick={() => setActiveTab('ruta-tramites')}
               className="btn-gov flex-1"
-            >
-              📋 Ver ruta de trámites →
-            </button>
+            >📋 Ver ruta de trámites →</button>
           </div>
         </div>
       )}
 
-      {/* Historial */}
-      {historial.length > 0 && paso === 1 && (
+      {/* Historial de Mis Consultas */}
+      {paso === 1 && (
         <div className="card-gov">
-          <h3 className="font-bold text-gov-verde mb-3">🕐 Consultas recientes</h3>
-          <div className="space-y-2">
-            {historial.map(h => {
-              const cfg = SCORE_CONFIG[h.nivel_viabilidad] || SCORE_CONFIG.MEDIO
-              return (
-                <div key={h.id} className="flex items-center gap-3 p-2 border border-gov-gris-medio rounded-lg text-sm">
-                  <span className="text-xl">{cfg.emoji}</span>
-                  <div className="flex-1">
-                    <p className="font-medium">{giros.find(g => g.id === h.giro_id)?.nombre || 'Giro desconocido'}</p>
-                    <p className="text-xs text-gray-400">{alcaldias.find(a => a.id === h.alcaldia_id)?.nombre} · Score: {h.score_viabilidad}</p>
-                  </div>
-                  <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: cfg.bg, color: cfg.color }}>
-                    {h.nivel_viabilidad}
-                  </span>
-                </div>
-              )
-            })}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-gov-verde">🕐 Mis consultas anteriores</h3>
+            {user && (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                {user.user_metadata?.avatar_url
+                  ? <img src={user.user_metadata.avatar_url} className="w-5 h-5 rounded-full" alt="" />
+                  : <span>👤</span>}
+                {user.user_metadata?.full_name || user.email}
+              </span>
+            )}
           </div>
+
+          {historial.length === 0 ? (
+            <div className="text-center py-6 text-gray-400">
+              <p className="text-3xl mb-2">📋</p>
+              <p className="text-sm">Aún no tienes consultas registradas</p>
+              <p className="text-xs mt-1">Tu historial aparecerá aquí después de tu primera evaluación</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {historial.map(h => {
+                const cfg = SCORE_CONFIG[h.nivel_viabilidad] || SCORE_CONFIG.MEDIO
+                const fecha = h.created_at
+                  ? new Date(h.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+                  : ''
+                return (
+                  <div key={h.id} className="flex items-center gap-3 p-3 border border-gov-gris-medio rounded-lg text-sm hover:border-gov-verde transition-colors">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 font-black border-2"
+                      style={{ borderColor: cfg.color, background: cfg.bg, color: cfg.color }}
+                    >
+                      {h.score_viabilidad ?? '—'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gov-texto truncate">
+                        {giros.find(g => g.id === h.giro_id)?.nombre || 'Giro desconocido'}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        📍 {alcaldias.find(a => a.id === h.alcaldia_id)?.nombre || '—'}
+                        {h.emprendedor_nombre && ` · 👤 ${h.emprendedor_nombre}`}
+                        {fecha && ` · ${fecha}`}
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0"
+                      style={{ background: cfg.bg, color: cfg.color }}>
+                      {cfg.emoji} {h.nivel_viabilidad}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

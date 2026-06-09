@@ -6,6 +6,7 @@ import Sidebar from './components/layout/Sidebar'
 import AgenteOperativo from './components/agents/AgenteOperativo'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import Inicio from './pages/inicio'
+import Login from './pages/Login'
 
 const Spin = () => <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" /></div>
 
@@ -14,6 +15,8 @@ const Viabilidad   = lazy(() => import('./pages/viabilidad'))
 const RutaTramites = lazy(() => import('./pages/ruta-tramites'))
 const Programas    = lazy(() => import('./pages/programas'))
 const Analitica    = lazy(() => import('./pages/analitica'))
+const ETLControl   = lazy(() => import('./pages/etl-control'))
+const Gestion      = lazy(() => import('./pages/gestion'))
 
 // Páginas públicas (sin login)
 const PAGES_PUBLICAS = ['viabilidad', 'ruta-tramites', 'programas']
@@ -27,51 +30,8 @@ export default function App() {
     </div>
   )
 
-  // Sin login: inicio O páginas públicas (viabilidad, ruta-tramites, programas)
-  if (!user) {
-    const esPublica = PAGES_PUBLICAS.includes(activeTab)
-    return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
-        <div className="tricolor w-full" />
-        {/* Mini-nav pública */}
-        {esPublica && (
-          <div className="bg-white border-b border-gray-100 px-4 py-2 flex items-center gap-3">
-            <button
-              onClick={() => setActiveTab('inicio')}
-              className="text-xs flex items-center gap-1 hover:opacity-70 transition-opacity"
-              style={{ color: 'var(--gov-guinda)' }}
-            >
-              ← Inicio
-            </button>
-            <span className="text-gray-300">|</span>
-            {PAGES_PUBLICAS.map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className="text-xs px-3 py-1 rounded-full transition-all"
-                style={activeTab === tab
-                  ? { background: 'var(--gov-guinda)', color: 'white' }
-                  : { color: 'var(--gov-guinda)', border: '1px solid var(--gov-guinda)' }
-                }
-              >
-                {{ viabilidad: '🚀 Viabilidad', 'ruta-tramites': '📋 Trámites', programas: '🎯 Programas' }[tab]}
-              </button>
-            ))}
-          </div>
-        )}
-        <main className="flex-1">
-          <Suspense fallback={<Spin />}>
-            {activeTab === 'viabilidad'      && <Viabilidad />}
-            {activeTab === 'ruta-tramites'   && <RutaTramites />}
-            {activeTab === 'programas'       && <Programas />}
-            {!esPublica                      && <Inicio />}
-          </Suspense>
-        </main>
-        <Footer projectName="SEDECO — Viabilidad CDMX" />
-        <AgenteOperativo />
-      </div>
-    )
-  }
+  // Sin login → pantalla de Login con Google
+  if (!user) return <Login />
 
   // Con login: app completa con sidebar
   return (
@@ -85,6 +45,8 @@ export default function App() {
              activeTab === 'ruta-tramites'   ? <RutaTramites /> :
              activeTab === 'programas'       ? <Programas />    :
              activeTab === 'analitica'       ? <Analitica />    :
+             activeTab === 'etl-control'    ? <ETLControl />   :
+             activeTab === 'gestion'        ? <Gestion />      :
              <Dashboard />}
           </Suspense>
         </main>

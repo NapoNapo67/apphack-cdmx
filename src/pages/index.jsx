@@ -1,16 +1,22 @@
 import { useSupabase } from '../hooks/useSupabase'
 import KPICard from '../components/ui/KPICard'
 import { useApp } from '../context/AppContext'
+import { FB_GIROS, FB_TRAMITES, FB_PROGRAMAS, FB_KPI } from '../lib/fallback-data'
 
 export default function Dashboard() {
   const { setActiveTab } = useApp()
-  const { data: giros }      = useSupabase('cat_giro_negocio')
-  const { data: tramites }   = useSupabase('tramite')
-  const { data: programas }  = useSupabase('programa_emprendimiento')
-  const { data: consultas }  = useSupabase('consulta_viabilidad')
+  const { data: _giros }     = useSupabase('cat_giro_negocio')
+  const { data: _tramites }  = useSupabase('cat_tramite')
+  const { data: _programas } = useSupabase('programa_emprendimiento')
+  const { data: _consultas } = useSupabase('consulta_viabilidad', { select: 'id,nivel_viabilidad' })
 
-  const consultasAlto  = consultas.filter(c => c.nivel_viabilidad === 'ALTO').length
-  const consultasMedio = consultas.filter(c => c.nivel_viabilidad === 'MEDIO').length
+  const giros    = _giros.length    ? _giros    : FB_GIROS
+  const tramites = _tramites.length ? _tramites : FB_TRAMITES
+  const programas= _programas.length? _programas: FB_PROGRAMAS
+
+  // KPIs reales de la base de datos
+  const totalConsultas   = _consultas.length
+  const consultasPositivas = _consultas.filter(c => ['ALTO', 'MEDIO'].includes(c.nivel_viabilidad)).length
 
   const ACCESOS = [
     {
@@ -66,10 +72,10 @@ export default function Dashboard() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KPICard title="Tipos de giro"         value={giros.length}    icon="🏪" subtitle="catalogados" />
-        <KPICard title="Trámites disponibles"  value={tramites.length} icon="📄" subtitle="del RETYS/SIAPEM" />
-        <KPICard title="Programas de apoyo"    value={programas.length}icon="🎯" subtitle="SEDECO y federal" />
-        <KPICard title="Consultas realizadas"  value={consultas.length}icon="📊" subtitle={`${consultasAlto} viabilidad alta`} color="oro" />
+        <KPICard title="Tipos de giro"         value={giros.length}          icon="🏪" subtitle="catalogados" />
+        <KPICard title="Trámites disponibles"  value={tramites.length}        icon="📄" subtitle="del RETYS/SIAPEM" />
+        <KPICard title="Programas de apoyo"    value={programas.length}       icon="🎯" subtitle="SEDECO y federal" />
+        <KPICard title="Consultas realizadas"  value={totalConsultas || '…'}  icon="📊" subtitle={totalConsultas ? `${consultasPositivas} con viabilidad positiva` : 'cargando...'} color="oro" />
       </div>
 
       {/* Accesos rápidos */}

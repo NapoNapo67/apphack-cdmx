@@ -13,3 +13,10 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Timeout extendido para la función de análisis IA (Claude puede tardar hasta 25s)
+[functions.analizar-viabilidad]
+  timeout = 26
+
+[functions.ejecutar-etl]
+  timeout = 26

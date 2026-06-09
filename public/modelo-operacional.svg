@@ -1,0 +1,229 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 820" font-family="Montserrat, Segoe UI, sans-serif">
+  <!-- Fondo -->
+  <rect width="1100" height="820" fill="#F8F9FA" rx="16"/>
+
+  <!-- Título -->
+  <rect x="0" y="0" width="1100" height="56" fill="#7B1F3A" rx="16"/>
+  <rect x="0" y="40" width="1100" height="16" fill="#7B1F3A"/>
+  <text x="550" y="36" text-anchor="middle" fill="white" font-size="20" font-weight="700">Modelo de Datos Operacional — Esquema public · SEDECO Viabilidad CDMX</text>
+
+  <!-- ══════════════════════════════════════════
+       CATÁLOGOS (columna izquierda)
+  ══════════════════════════════════════════ -->
+
+  <!-- cat_categoria_negocio -->
+  <g>
+    <rect x="30" y="80" width="210" height="130" fill="white" stroke="#B8975A" stroke-width="2" rx="8"/>
+    <rect x="30" y="80" width="210" height="30" fill="#B8975A" rx="8"/>
+    <rect x="30" y="102" width="210" height="8" fill="#B8975A"/>
+    <text x="135" y="100" text-anchor="middle" fill="white" font-size="11" font-weight="700">cat_categoria_negocio</text>
+    <text x="42" y="128" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="42" y="145" fill="#374151" font-size="10">   clave          VARCHAR(20)</text>
+    <text x="42" y="162" fill="#374151" font-size="10">   nombre         VARCHAR(80)</text>
+    <text x="42" y="179" fill="#374151" font-size="10">   icono          VARCHAR(10)</text>
+    <text x="42" y="196" fill="#374151" font-size="10">   orden          SMALLINT</text>
+  </g>
+
+  <!-- cat_giro_negocio -->
+  <g>
+    <rect x="30" y="240" width="210" height="170" fill="white" stroke="#B8975A" stroke-width="2" rx="8"/>
+    <rect x="30" y="240" width="210" height="30" fill="#B8975A" rx="8"/>
+    <rect x="30" y="262" width="210" height="8" fill="#B8975A"/>
+    <text x="135" y="260" text-anchor="middle" fill="white" font-size="11" font-weight="700">cat_giro_negocio</text>
+    <text x="42" y="288" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="42" y="305" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 categoria_id</tspan>  FK</text>
+    <text x="42" y="322" fill="#374151" font-size="10">   clave          VARCHAR(20)</text>
+    <text x="42" y="339" fill="#374151" font-size="10">   nombre         VARCHAR(100)</text>
+    <text x="42" y="356" fill="#374151" font-size="10">   tipo_siapem    VARCHAR(10)</text>
+    <text x="42" y="373" fill="#374151" font-size="10">   requiere_cofepris BOOLEAN</text>
+    <text x="42" y="390" fill="#374151" font-size="10">   requiere_pc    BOOLEAN</text>
+  </g>
+
+  <!-- cat_alcaldia -->
+  <g>
+    <rect x="30" y="440" width="210" height="150" fill="white" stroke="#B8975A" stroke-width="2" rx="8"/>
+    <rect x="30" y="440" width="210" height="30" fill="#B8975A" rx="8"/>
+    <rect x="30" y="462" width="210" height="8" fill="#B8975A"/>
+    <text x="135" y="460" text-anchor="middle" fill="white" font-size="11" font-weight="700">cat_alcaldia</text>
+    <text x="42" y="488" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="42" y="505" fill="#374151" font-size="10">   clave          CHAR(3) UQ</text>
+    <text x="42" y="522" fill="#374151" font-size="10">   nombre         VARCHAR(60)</text>
+    <text x="42" y="539" fill="#374151" font-size="10">   nombre_corto   VARCHAR(20)</text>
+    <text x="42" y="556" fill="#374151" font-size="10">   poblacion      INTEGER</text>
+    <text x="42" y="573" fill="#374151" font-size="10">   delegacion_hist VARCHAR(60)</text>
+  </g>
+
+  <!-- cat_persona_juridica -->
+  <g>
+    <rect x="30" y="620" width="210" height="130" fill="white" stroke="#B8975A" stroke-width="2" rx="8"/>
+    <rect x="30" y="620" width="210" height="30" fill="#B8975A" rx="8"/>
+    <rect x="30" y="642" width="210" height="8" fill="#B8975A"/>
+    <text x="135" y="640" text-anchor="middle" fill="white" font-size="11" font-weight="700">cat_persona_juridica</text>
+    <text x="42" y="668" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="42" y="685" fill="#374151" font-size="10">   clave          VARCHAR(10)</text>
+    <text x="42" y="702" fill="#374151" font-size="10">   nombre         VARCHAR(80)</text>
+    <text x="42" y="719" fill="#374151" font-size="10">   descripcion    TEXT</text>
+    <text x="42" y="736" fill="#374151" font-size="10">   requiere_notario BOOLEAN</text>
+  </g>
+
+  <!-- ══════════════════════════════════════════
+       TABLA CENTRAL: consulta_viabilidad
+  ══════════════════════════════════════════ -->
+  <g>
+    <rect x="380" y="200" width="260" height="360" fill="white" stroke="#7B1F3A" stroke-width="3" rx="8"/>
+    <rect x="380" y="200" width="260" height="34" fill="#7B1F3A" rx="8"/>
+    <rect x="380" y="226" width="260" height="8" fill="#7B1F3A"/>
+    <text x="510" y="222" text-anchor="middle" fill="white" font-size="13" font-weight="700">consulta_viabilidad</text>
+    <text x="392" y="256" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>             UUID PK</text>
+    <text x="392" y="273" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 giro_id</tspan>          FK → cat_giro</text>
+    <text x="392" y="290" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 alcaldia_id</tspan>      FK → cat_alcaldia</text>
+    <text x="392" y="307" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 persona_id</tspan>       FK → cat_persona</text>
+    <text x="392" y="324" fill="#374151" font-size="10">   nombre_negocio  VARCHAR(120)</text>
+    <text x="392" y="341" fill="#374151" font-size="10">   descripcion_idea TEXT</text>
+    <text x="392" y="358" fill="#374151" font-size="10">   score_viabilidad NUMERIC(5,2)</text>
+    <text x="392" y="375" fill="#374151" font-size="10">   nivel_viabilidad VARCHAR(10)</text>
+    <text x="392" y="392" fill="#374151" font-size="10">   resultado_json  JSONB</text>
+    <text x="392" y="409" fill="#374151" font-size="10">   inversion_est   NUMERIC(12,2)</text>
+    <text x="392" y="426" fill="#374151" font-size="10">   tiempo_apertura_dias INT</text>
+    <text x="392" y="443" fill="#374151" font-size="10">   estado_id       FK → cat_estado</text>
+    <text x="392" y="460" fill="#374151" font-size="10">   created_at      TIMESTAMPTZ</text>
+    <text x="392" y="477" fill="#374151" font-size="10">   updated_at      TIMESTAMPTZ</text>
+    <text x="392" y="494" fill="#374151" font-size="10">   created_by      UUID → auth</text>
+    <text x="392" y="511" fill="#374151" font-size="10">   updated_by      UUID → auth</text>
+    <text x="392" y="532" fill="#6B7280" font-size="9" font-style="italic">-- Índices: giro_id, alcaldia_id, created_at</text>
+    <text x="392" y="547" fill="#6B7280" font-size="9" font-style="italic">-- RLS: created_by = auth.uid()</text>
+  </g>
+
+  <!-- ══════════════════════════════════════════
+       tramite_consulta (relación M:M)
+  ══════════════════════════════════════════ -->
+  <g>
+    <rect x="380" y="590" width="260" height="130" fill="white" stroke="#6366F1" stroke-width="2" rx="8"/>
+    <rect x="380" y="590" width="260" height="30" fill="#6366F1" rx="8"/>
+    <rect x="380" y="612" width="260" height="8" fill="#6366F1"/>
+    <text x="510" y="610" text-anchor="middle" fill="white" font-size="11" font-weight="700">tramite_consulta  (M:M)</text>
+    <text x="392" y="638" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="392" y="655" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 consulta_id</tspan>  FK → consulta_viabilidad</text>
+    <text x="392" y="672" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 tramite_id</tspan>   FK → cat_tramite</text>
+    <text x="392" y="689" fill="#374151" font-size="10">   orden          SMALLINT</text>
+    <text x="392" y="706" fill="#374151" font-size="10">   completado     BOOLEAN</text>
+    <text x="392" y="723" fill="#6B7280" font-size="9" font-style="italic">-- UNIQUE(consulta_id, tramite_id)</text>
+  </g>
+
+  <!-- ══════════════════════════════════════════
+       CATÁLOGOS (columna derecha)
+  ══════════════════════════════════════════ -->
+
+  <!-- cat_tramite -->
+  <g>
+    <rect x="780" y="80" width="290" height="200" fill="white" stroke="#B8975A" stroke-width="2" rx="8"/>
+    <rect x="780" y="80" width="290" height="30" fill="#B8975A" rx="8"/>
+    <rect x="780" y="102" width="290" height="8" fill="#B8975A"/>
+    <text x="925" y="100" text-anchor="middle" fill="white" font-size="11" font-weight="700">cat_tramite</text>
+    <text x="792" y="128" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="792" y="145" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 dependencia_id</tspan> FK</text>
+    <text x="792" y="162" fill="#374151" font-size="10">   clave          VARCHAR(20)</text>
+    <text x="792" y="179" fill="#374151" font-size="10">   nombre         VARCHAR(120)</text>
+    <text x="792" y="196" fill="#374151" font-size="10">   tipo_siapem    VARCHAR(10)</text>
+    <text x="792" y="213" fill="#374151" font-size="10">   costo_min      NUMERIC(10,2)</text>
+    <text x="792" y="230" fill="#374151" font-size="10">   costo_max      NUMERIC(10,2)</text>
+    <text x="792" y="247" fill="#374151" font-size="10">   dias_resolucion SMALLINT</text>
+    <text x="792" y="264" fill="#374151" font-size="10">   es_obligatorio BOOLEAN</text>
+  </g>
+
+  <!-- cat_dependencia -->
+  <g>
+    <rect x="780" y="310" width="290" height="130" fill="white" stroke="#B8975A" stroke-width="2" rx="8"/>
+    <rect x="780" y="310" width="290" height="30" fill="#B8975A" rx="8"/>
+    <rect x="780" y="332" width="290" height="8" fill="#B8975A"/>
+    <text x="925" y="330" text-anchor="middle" fill="white" font-size="11" font-weight="700">cat_dependencia</text>
+    <text x="792" y="358" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="792" y="375" fill="#374151" font-size="10">   clave          VARCHAR(20)</text>
+    <text x="792" y="392" fill="#374151" font-size="10">   nombre         VARCHAR(80)</text>
+    <text x="792" y="409" fill="#374151" font-size="10">   siglas         VARCHAR(20)</text>
+    <text x="792" y="426" fill="#374151" font-size="10">   url_tramite    TEXT</text>
+  </g>
+
+  <!-- cat_estado_tramite -->
+  <g>
+    <rect x="780" y="470" width="290" height="130" fill="white" stroke="#10B981" stroke-width="2" rx="8"/>
+    <rect x="780" y="470" width="290" height="30" fill="#10B981" rx="8"/>
+    <rect x="780" y="492" width="290" height="8" fill="#10B981"/>
+    <text x="925" y="490" text-anchor="middle" fill="white" font-size="11" font-weight="700">cat_estado_tramite  (universal)</text>
+    <text x="792" y="518" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="792" y="535" fill="#374151" font-size="10">   clave          VARCHAR(20) UQ</text>
+    <text x="792" y="552" fill="#374151" font-size="10">   nombre         VARCHAR(60)</text>
+    <text x="792" y="569" fill="#374151" font-size="10">   color_hex      CHAR(7)</text>
+    <text x="792" y="569" fill="#6B7280" font-size="9"><tspan dy="14">   NUEVO / ASIGNADO / EN_PROCESO</tspan></text>
+    <text x="792" y="600" fill="#6B7280" font-size="9" font-style="italic">   PENDIENTE / RESUELTO / CANCELADO</text>
+  </g>
+
+  <!-- programa_emprendimiento -->
+  <g>
+    <rect x="780" y="630" width="290" height="155" fill="white" stroke="#B8975A" stroke-width="2" rx="8"/>
+    <rect x="780" y="630" width="290" height="30" fill="#B8975A" rx="8"/>
+    <rect x="780" y="652" width="290" height="8" fill="#B8975A"/>
+    <text x="925" y="650" text-anchor="middle" fill="white" font-size="11" font-weight="700">programa_emprendimiento</text>
+    <text x="792" y="678" fill="#374151" font-size="10"><tspan font-weight="700" fill="#7B1F3A">🔑 id</tspan>          SERIAL PK</text>
+    <text x="792" y="695" fill="#374151" font-size="10"><tspan fill="#1D4ED8">🔗 tipo_id</tspan>       FK → cat_programa_tipo</text>
+    <text x="792" y="712" fill="#374151" font-size="10">   nombre         VARCHAR(120)</text>
+    <text x="792" y="729" fill="#374151" font-size="10">   monto_min/max  NUMERIC</text>
+    <text x="792" y="746" fill="#374151" font-size="10">   requiere_rfc   BOOLEAN</text>
+    <text x="792" y="763" fill="#374151" font-size="10">   convocatoria_url TEXT</text>
+    <text x="792" y="775" fill="#6B7280" font-size="9" font-style="italic">   + campos de auditoría estándar</text>
+  </g>
+
+  <!-- ══════════════════════════════════════════
+       LÍNEAS DE RELACIÓN
+  ══════════════════════════════════════════ -->
+
+  <!-- cat_categoria → cat_giro (1:N) -->
+  <line x1="135" y1="210" x2="135" y2="240" stroke="#B8975A" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="145" y="228" fill="#B8975A" font-size="9">1:N</text>
+
+  <!-- cat_giro → consulta_viabilidad -->
+  <line x1="240" y1="325" x2="380" y2="325" stroke="#1D4ED8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="375,321 383,325 375,329" fill="#1D4ED8"/>
+  <text x="280" y="318" fill="#1D4ED8" font-size="9">N:1</text>
+
+  <!-- cat_alcaldia → consulta_viabilidad -->
+  <line x1="240" y1="515" x2="380" y2="420" stroke="#1D4ED8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="375,416 383,420 377,426" fill="#1D4ED8"/>
+  <text x="280" y="460" fill="#1D4ED8" font-size="9">N:1</text>
+
+  <!-- cat_persona → consulta_viabilidad -->
+  <line x1="240" y1="660" x2="380" y2="450" stroke="#1D4ED8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="374,446 383,450 376,456" fill="#1D4ED8"/>
+
+  <!-- consulta_viabilidad → tramite_consulta (1:N) -->
+  <line x1="510" y1="560" x2="510" y2="590" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="506,585 510,593 514,585" fill="#6366F1"/>
+  <text x="520" y="578" fill="#6366F1" font-size="9">1:N</text>
+
+  <!-- tramite_consulta → cat_tramite -->
+  <line x1="640" y1="655" x2="780" y2="200" stroke="#1D4ED8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="776,195 784,200 776,205" fill="#1D4ED8"/>
+  <text x="700" y="430" fill="#1D4ED8" font-size="9">N:1</text>
+
+  <!-- cat_tramite → cat_dependencia (N:1) -->
+  <line x1="925" y1="280" x2="925" y2="310" stroke="#B8975A" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="921,305 925,313 929,305" fill="#B8975A"/>
+  <text x="935" y="298" fill="#B8975A" font-size="9">N:1</text>
+
+  <!-- consulta → cat_estado -->
+  <line x1="640" y1="443" x2="780" y2="500" stroke="#10B981" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="775,496 783,500 776,506" fill="#10B981"/>
+
+  <!-- Leyenda -->
+  <rect x="30" y="775" width="500" height="34" fill="white" stroke="#E5E7EB" stroke-width="1" rx="6"/>
+  <rect x="42" y="787" width="14" height="3" fill="#B8975A"/>
+  <text x="62" y="796" fill="#6B7280" font-size="10">Catálogo (lookup)</text>
+  <rect x="160" y="787" width="14" height="3" fill="#7B1F3A"/>
+  <text x="180" y="796" fill="#6B7280" font-size="10">Tabla central</text>
+  <rect x="280" y="787" width="14" height="3" fill="#1D4ED8" stroke-dasharray="3,2"/>
+  <text x="300" y="796" fill="#6B7280" font-size="10">FK / Relación</text>
+  <rect x="400" y="787" width="14" height="3" fill="#10B981"/>
+  <text x="420" y="796" fill="#6B7280" font-size="10">Catálogo universal</text>
+
+  <text x="750" y="796" fill="#7B1F3A" font-size="10" font-weight="600">Normalización: 3FN · Auditoría universal</text>
+</svg>

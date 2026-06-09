@@ -5,7 +5,9 @@ const NAV_ITEMS = [
   { id: 'viabilidad',      label: 'Evaluador IA',        icon: '🚀', grupo: 'Viabilidad' },
   { id: 'ruta-tramites',   label: 'Ruta de Trámites',    icon: '📋', grupo: 'Viabilidad' },
   { id: 'programas',       label: 'Programas de Apoyo',  icon: '🎯', grupo: 'Viabilidad' },
+  { id: 'gestion',         label: 'Gestión Consultas',   icon: '📋', grupo: 'Operación' },
   { id: 'analitica',       label: 'Analítica BI',        icon: '📈', grupo: 'BI' },
+  { id: 'etl-control',    label: 'Control ETL',         icon: '⚙️', grupo: 'BI' },
 ]
 
 export default function Sidebar() {
