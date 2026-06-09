@@ -262,7 +262,10 @@ export default function Viabilidad() {
       setAnalisis(analisisData)
 
       // Guardar en historial con datos del emprendedor y perfil demográfico
+      // estado_id SIEMPRE se establece para que el ETL pueda resolverlo en el DW
+      // NUEVO = 726577d6-1750-4c66-807d-3e6c43e8be22
       supabase.from('consulta_viabilidad').insert({
+        estado_id:                '726577d6-1750-4c66-807d-3e6c43e8be22',
         giro_id:                  form.giro_id,
         giro_descripcion:         form.giro_libre,
         tipo_persona_clave:       form.tipo_persona,
